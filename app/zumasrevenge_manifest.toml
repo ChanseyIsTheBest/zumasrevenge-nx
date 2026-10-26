@@ -1,0 +1,27 @@
+# ReXGlue recompilation manifest for Zuma (Xbox Live Arcade, title 584107EF, default.xex with Title Update #2).
+#
+# Run tools/codegen.ps1 (Windows): it calls `rexglue codegen zumasrevenge_manifest.toml` and the post-codegen steps. The
+# project name sets the prefix of everything generated: generated/default/zumasrevenge_{init,pch,funcs}.h,
+# zumasrevenge_recomp.N.cpp, and the CMake target zumasrevenge_recomp built by CMakeLists.txt.
+#
+# default.xex (tools/xex_info.py, 2026-10-26): image base 0x82000000, image size 0x004D0000, XDK 2.0.2135, version
+# 0.0.1.1. It imports only xam.xex and xboxkrnl.exe; the game has no other code module. Title Update #2
+# (default.xexp next to it in assets/game_root) makes it 0.0.3.1: the generator and the game apply it themselves, and
+# every address in this project is the patched image's (entry point 0x820CE650).
+
+[project]
+name = "zumasrevenge"
+sdk_version = "0.10.0"
+# Your own game files: the extracted XBLA package (assets/game_root, made by tools/stfs_extract.py), with default.xex
+# at its root. Nothing from the game is distributed with this project.
+game_root = "../assets/game_root"
+
+[entrypoint]
+file_path = "../assets/game_root/default.xex"
+out_directory_path = "generated/default"
+
+# The includes are processed before this table, so whatever is set here overrides what is included.
+#   overrides.toml       written by hand: code the automatic function discovery misses, each with its evidence
+#   perf_overrides.toml  code generation options for speed (registers as C++ locals, ...); the same generated code
+#                        serves the PC and the Switch builds.
+includes = ["overrides.toml", "perf_overrides.toml"]
