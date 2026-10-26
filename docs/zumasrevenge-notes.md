@@ -215,7 +215,7 @@ menu items clickable and tapping in levels shoots the ball in that direction". `
 - **Checked:** the PC, touch alone (`touch11`): the title, Adventure from the main menu, the story, the map, level 1-1's
   lesson and play (combos, the score 1,200 -> 12,150). Ryujinx, the Switch build, touch alone (`touch_emu1`): the same
   path, the lesson passed, combos.
-- **Not by touch:** opening the pause menu (the + button, as on the console); the levels' lily-pad hops (the
-  shoulder buttons).
+- **Not by touch:** opening the pause menu (the + button, as on the console). Not reached in the tests: the later
+  levels where the frog moves between lily pads, the boss levels, the other modes' screens.
 - **Delivered:** `out/dist/dev_20261027_zumasrevenge/zumasrevenge-nx/` (NRO `3307b7db...`: the optimised build with
   touch; the README with the touch controls); ELF and map `out/nx/elf/zumasrevenge_dev_touch_20261027.*`.
