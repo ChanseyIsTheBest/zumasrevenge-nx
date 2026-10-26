@@ -116,13 +116,10 @@ presentation interval is +14000 (Renut's `kPresentInterval` 0x36B0; the frame ho
 - **`renut1`** (Vulkan, 120 s, the same input as `trace1`): the title, the story, the island map and level 1-1
   ("Shipwrecked!") played as on the emulated GPU; 60 game frames a second from the title on, Renut's render thread
   0.5-0.7 ms and the GPU 1.3-2.1 ms a frame; no shader missing, no warning.
-- **Known issue: the PopCap intro video is black** (about 10 s at start; the game from the title on is drawn). The
-  movie player (XMV, `0x82330000-0x82334800`) draws each frame as one quad (`vs_9d7d9f03...` / `ps_24718044...`, three
-  linear planes it fills between LockRect `sub_82310708` and UnlockRect `sub_8230EEC8`, ViewportEnable off, its own
-  sampler words written into the device at +1152 / +1176 / +1200) and presents with D3DDevice_Present
-  (`sub_82309B78`), not Swap. Checked and correct: the quad's vertices (1280x720 in pixels, `video3`'s stream dump),
-  Renut's ViewportEnable against the game's setter, the automatic back / front buffer words (+15236 / +15232). Not yet
-  found. Those frames also skip the frame hook (on Swap): 127 a second on the PC, whose window has no vsync.
+- **The intro video** shows on the PC too (`touch9`, shots every 2 s: the PopCap logo, the flag, the storm); the
+  black shots of `renut1` (6 s and 12 s) were dark moments of the video. Its frames present through
+  D3DDevice_Present (`sub_82309B78`), not Swap, so they skip the frame hook's pacing: 127 a second on the PC, whose
+  minimised window has no vsync (the console's swapchain paces them).
 
 ## Languages (2026-10-27)
 
@@ -156,3 +153,35 @@ presentation interval is +14000 (Renut's `kPresentInterval` 0x36B0; the frame ho
   frame, no error in the log.
 - **Delivered:** `out/dist/dev_20261027_zumasrevenge/zumasrevenge-nx/` (NRO `a4dd0384...`, the game pack, README.txt);
   ELF and map `out/nx/elf/zumasrevenge_dev_20261027.*`.
+
+## Optimising the hot functions (2026-10-27, from the emulator)
+
+The method is docs/optimising-functions.md, as in Zuma and both Feeding Frenzy ports.
+
+- **Profile** (Ryujinx `prof1`: 330 s, level 1-1 played with `out/zr_emu_script.txt`, `switch_profile_report` /
+  `switch_profile_stacks`; map `out/nx/elf/zumasrevenge_dev_20261027.map`; `tools/switch_hot_functions.py --top 5000
+  --from-report 4`, all guest threads): the game's main thread is 5.1 % of the busy samples; 150 generated functions
+  were sampled, 138 eligible (12 tiny leaves left out). The hottest: XMemSet `sub_826067D8` (361 samples, a game
+  thread's 15 %), the XDK audio library (`sub_828BA738`, `sub_828BA0B0`, `sub_828C9308`, ...), and on the main thread
+  `sub_821C5098` (105), `sub_824690B8`, `sub_8249F0B0`, `sub_8246BB78`, `sub_8249EFF8`.
+- **Hand-written natives:**
+  - `h_826067D8.h`, the XDK's XMemSet (r3 = dst, r4 = byte, r5 = n: a byte loop below 16, else stvlx / stvx / dcbz128
+    lines / stvx / stvrx): one host memset, the copy's registers (r4-r12, v0, v12, v13, lr) in closed form per path;
+    a range that wraps or straddles 0xE0000000, or a stride word (0x82981FB4) other than 16, takes the copy.
+  - `h_821C5098.h`, MSVC's uninitialized copy of 36-byte elements (a guest memcpy call each): one host copy of the span
+    while memcpy's native is on and the ranges are ordinary (whole elements, no 0 destination, no overlap, no wrap),
+    else the copy.
+- **Localized copies:** all 138 eligible (35 in `localized.txt`, 103 in `localized_bulk.txt`, 8 shards).
+- **Checks:**
+  - PC verify mode (`verify1`, `verify2`: Renut, level 1-1, 150 s each; 47.2 and 43.4 million guarded calls):
+    XMemSet's native checked over a million calls, no difference. Two differences a run, each in the XDK audio
+    library (`sub_828BA738` f13 and `sub_828BA0B0` memory in the first, `sub_828C7D58` r9 one apart and
+    `sub_828BA0B0` again in the second, other values): two threads on one audio object (r3 the same in both of the
+    first run's, logged in the same millisecond), the race bejeweled3-nx's notes record for `sub_828AFB28` (the guard
+    runs native and original one after the other while another thread writes the object). Not reproducible, and not
+    the same function twice in the same way.
+  - `tools/check_switch_build.py`: all checks passed.
+- **Measured** (Ryujinx, the same NRO with the 138 natives on, `prof2`, and their keys off, `prof3`; the same script and
+  length): the main thread's median 3.93 -> 3.71 ms a game frame; 57.3 -> 58.9 game frames a second on average (5 -> 3
+  of 25 windows below 58). XMemSet 314 -> 16 samples; the 36-byte copy 115 -> none (the others move both ways: the
+  emulator's samples land on function entries).

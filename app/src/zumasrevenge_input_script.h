@@ -31,6 +31,9 @@ InputFactory Wrap(InputFactory base);
 // merged with the real pads like the scripted pad; presses made at once follow each other, each released before the
 // next. A tap on the title screen presses START this way, and a tap on a list dialog's entry the pad's way to it.
 void Press(uint16_t buttons, uint32_t frames);
+// zumasrevenge-nx (2026-10-27): the left stick at (lx, ly) for `frames` game frames and `buttons` for the frames from
+// `buttons_after` on (a level's tap: the frog aimed with the stick, then A while it is held).
+void PressStick(int16_t lx, int16_t ly, uint16_t buttons, uint32_t frames, uint32_t buttons_after);
 
 // Pad presses so far, as the game reads its pads: a button pressed, or a stick or trigger pushed out of its rest, on any
 // pad but the touch controls' own (Press). A touch hides the board's cursor until this changes (zumasrevenge_touch.cpp).

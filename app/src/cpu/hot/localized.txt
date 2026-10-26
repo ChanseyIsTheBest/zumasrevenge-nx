@@ -14,4 +14,39 @@
 # the 09:29 NRO, reports 4 on; tools/switch_hot_functions.py with each build's map), samples of both summed:
 # feedingfrenzy-nx (2026-10-26, the user: "machine optimise around the top 100", "just use data from the emulator"): the hottest 35 generated functions of the Ryujinx profile out/renut_tests/emu/prof1 (all guest threads, 300 s of play).
 # zuma-nx (2026-10-27, the user: "optimise zumasrevenge's functions in the same manner you did feeding frenzy 1 and 2's"): the hottest 35 eligible generated functions of the Ryujinx profile out/renut_tests/emu/prof1 (all guest threads, reports 4 on: Level 1-1 with the stick and A, 330 s; map out/nx/elf/zumasrevenge_dev_20261027_0045.map). Only 62 generated functions were sampled at all, 56 of them eligible. sub_82073B70 (std::string::compare, the hottest) and sub_820E4300 (a 3x3 matrix product, the main thread's third) are hand-written (h_*.h); their copies are the reference. sub_8236BB48 (the second hottest: 1,781 instructions of the audio thread's mixing, 293 stores) keeps its copy: under docs/hand-natives.md every store stays, and its samples are not the frame's. Left out: the 6 tiny leaves (820EC018, 820F3020, 8232CB48, 8208EC08, 822ED298, 82382A28).
-# zumasrevenge-nx (2026-10-27): empty until a profile of Zuma's Revenge (Zuma's entries removed).
+# zumasrevenge-nx (2026-10-27, the user: "port zuma's revenge ... + do the optimisations like you are"): the hottest 35 eligible generated functions of the Ryujinx profile out/renut_tests/emu/prof1 (all guest threads, reports 4 on: level 1-1 with the stick and A, 330 s; map out/nx/elf/zumasrevenge_dev_20261027.map). 150 generated functions were sampled, 138 of them eligible. sub_826067D8 (XMemSet, the hottest) and sub_821C5098 (the main thread's hottest: an uninitialized copy of 36-byte elements) are hand-written (h_*.h); their copies are the reference. Left out: the 12 tiny leaves (82582900, 8265E5C0, 82545DC8, 82543D30, 82416058, 823355C8, 825676F0, 827FCD50, 82846058, 82581DA8, 822FA188, 82303640).
+826067D8 361 samples: all guest threads
+828BA738 125 samples: all guest threads
+821C5098 105 samples: all guest threads
+828BA0B0 99 samples: all guest threads
+828C9308 89 samples: all guest threads
+828BC4B8 80 samples: all guest threads
+828D06F0 73 samples: all guest threads
+824690B8 67 samples: all guest threads
+8249F0B0 61 samples: all guest threads
+8246BB78 54 samples: all guest threads
+8249EFF8 54 samples: all guest threads
+825CCCE0 51 samples: all guest threads
+8249F208 46 samples: all guest threads
+82851230 38 samples: all guest threads
+825F0E30 36 samples: all guest threads
+8249F530 32 samples: all guest threads
+82605F78 25 samples: all guest threads
+8286E878 24 samples: all guest threads
+828E8220 23 samples: all guest threads
+8258AB90 21 samples: all guest threads
+82184EC8 19 samples: all guest threads
+82185638 18 samples: all guest threads
+824A06D0 16 samples: all guest threads
+82895660 16 samples: all guest threads
+8244D9C8 15 samples: all guest threads
+82605950 15 samples: all guest threads
+82186430 13 samples: all guest threads
+82567878 12 samples: all guest threads
+822EC9F8 12 samples: all guest threads
+8256D8F8 12 samples: all guest threads
+82185F48 12 samples: all guest threads
+8249F180 12 samples: all guest threads
+82185588 12 samples: all guest threads
+8286BC58 12 samples: all guest threads
+828203D8 12 samples: all guest threads

@@ -23,6 +23,7 @@
 
 #include "zumasrevenge_capture.h"
 #include "zumasrevenge_pc_profiler.h"
+#include "zumasrevenge_touch.h"
 #if ZUMASREVENGE_NATIVE_RENDERER
 #include "me/me_native_system.h"
 #endif
@@ -187,6 +188,8 @@ void PaceRenutSwap(uint32_t interval) {
 // address. Renut's device keeps the presentation interval where XDK 20871's does (+14000 / 0x36B0).
 extern "C" REX_FUNC(__imp__sub_82309410);
 REX_HOOK_RAW(sub_82309410) {  // D3DDevice_Swap
+  // The touches since the previous frame, on the game's thread between two frames (zumasrevenge_touch.cpp).
+  zumasrevenge::touch::Dispatch(ctx, base);
   const uint32_t interval_offset = kDeviceIntervalOffset;
   // Which presentation interval the game asks for (1 = every vblank, 2 = every second one), when it changes.
   if (interval_offset) {

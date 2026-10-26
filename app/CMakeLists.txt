@@ -73,6 +73,8 @@ set(ZUMASREVENGE_SOURCES
     src/zumasrevenge_frame_hooks.cpp
     # Scripted controller for unattended test runs (cvar zumasrevenge_input_script).
     src/zumasrevenge_input_script.cpp
+    # Touch controls (2026-10-27): the touch screen / the PC's mouse as the game's own touches (zumasrevenge_touch).
+    src/zumasrevenge_touch.cpp
     # Logs every C++ exception the game throws (type and message) before the SDK's RaiseException ends the game.
     src/zumasrevenge_throw_log.cpp
     # Windows: logs fatal host exceptions the SDK does not report (illegal instruction, ...) with module + offset.

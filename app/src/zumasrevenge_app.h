@@ -30,6 +30,7 @@
 #include "zumasrevenge_enhancements.h"
 #include "zumasrevenge_input_script.h"
 #include "zumasrevenge_language.h"
+#include "zumasrevenge_touch.h"
 #include "zumasrevenge_pc_profiler.h"
 #include "zumasrevenge_pgo.h"
 
@@ -256,6 +257,22 @@ class ZumasRevengeApp : public rex::ReXApp {
     return rex::ReXApp::OnFinalizePaths(defaults, std::move(resume));
   }
 #endif
+
+  // The PC: the left mouse button and the pointer are the game's touches (zumasrevenge_touch; the Switch reads its
+  // touch screen itself). bejeweled3-nx's.
+  void OnMouseDown(rex::ui::MouseEvent& e) override {
+    if (e.button() == rex::ui::MouseEvent::Button::kLeft) ForwardMouse(zumasrevenge::touch::MouseKind::kDown, e);
+  }
+  void OnMouseMove(rex::ui::MouseEvent& e) override { ForwardMouse(zumasrevenge::touch::MouseKind::kMove, e); }
+  void OnMouseUp(rex::ui::MouseEvent& e) override {
+    if (e.button() == rex::ui::MouseEvent::Button::kLeft) ForwardMouse(zumasrevenge::touch::MouseKind::kUp, e);
+  }
+  void ForwardMouse(zumasrevenge::touch::MouseKind kind, const rex::ui::MouseEvent& e) {
+    const auto* w = window();
+    if (!w || !w->GetActualPhysicalWidth() || !w->GetActualPhysicalHeight()) return;
+    zumasrevenge::touch::OnWindowMouse(kind, float(e.x()) / float(w->GetActualPhysicalWidth()),
+                                       float(e.y()) / float(w->GetActualPhysicalHeight()));
+  }
 
   void OnShutdown() override {
 #if ZUMASREVENGE_RENUT_RENDERER

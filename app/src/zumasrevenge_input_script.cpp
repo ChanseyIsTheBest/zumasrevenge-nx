@@ -256,6 +256,9 @@ class ScriptedInputDriver final : public rex::input::InputDriver {
 struct Scheduled {
   uint64_t from = 0, until = 0;  // game frames
   uint16_t buttons = 0;
+  // zumasrevenge-nx (2026-10-27, PressStick): the left stick through [from, until), the buttons from buttons_from.
+  int16_t lx = 0, ly = 0;
+  uint64_t buttons_from = 0;
 };
 std::mutex g_press_mutex;
 std::vector<Scheduled> g_presses;
@@ -285,6 +288,7 @@ class TouchPressDriver final : public rex::input::InputDriver {
     }
     const uint64_t frame = g_zumasrevenge_game_frames.load(std::memory_order_relaxed);
     uint16_t buttons = 0;
+    int16_t lx = 0, ly = 0;
     {
       std::lock_guard<std::mutex> lock(g_press_mutex);
       std::erase_if(g_presses, [&](const Scheduled& p) { return frame >= p.until + kReleaseFrames; });
@@ -292,16 +296,25 @@ class TouchPressDriver final : public rex::input::InputDriver {
         return X_ERROR_DEVICE_NOT_CONNECTED;
       }
       for (const Scheduled& p : g_presses) {
-        if (frame >= p.from && frame < p.until) buttons |= p.buttons;
+        if (frame >= p.from && frame < p.until) {
+          if (frame >= p.buttons_from) buttons |= p.buttons;
+          if (p.lx || p.ly) {
+            lx = p.lx;
+            ly = p.ly;
+          }
+        }
       }
     }
-    if (buttons != last_.exchange(buttons, std::memory_order_relaxed)) {
+    const uint64_t state = buttons | uint64_t(uint16_t(lx)) << 16 | uint64_t(uint16_t(ly)) << 32;
+    if (state != last_.exchange(state, std::memory_order_relaxed)) {
       packet_.fetch_add(1, std::memory_order_relaxed);
     }
     if (out_state) {
       *out_state = {};
       out_state->packet_number = packet_.load(std::memory_order_relaxed);
       out_state->gamepad.buttons = buttons;
+      out_state->gamepad.thumb_lx = lx;
+      out_state->gamepad.thumb_ly = ly;
     }
     return X_ERROR_SUCCESS;
   }
@@ -336,7 +349,7 @@ class TouchPressDriver final : public rex::input::InputDriver {
   }
 
  private:
-  std::atomic<uint16_t> last_{0};
+  std::atomic<uint64_t> last_{0};
   // Above the real pads' packet numbers (the merge keeps the largest), so the press counts as a change.
   std::atomic<uint32_t> packet_{0x20000000};
 };
@@ -372,13 +385,18 @@ uint64_t PadPresses() {
   return g_pad_presses.load(std::memory_order_relaxed);
 }
 
-void Press(uint16_t buttons, uint32_t frames) {
+void Press(uint16_t buttons, uint32_t frames) { PressStick(0, 0, buttons, frames, 0); }
+
+void PressStick(int16_t lx, int16_t ly, uint16_t buttons, uint32_t frames, uint32_t buttons_after) {
   const uint64_t now = g_zumasrevenge_game_frames.load(std::memory_order_relaxed);
   std::lock_guard<std::mutex> lock(g_press_mutex);
   Scheduled p;
   p.from = std::max(now, g_press_next);
   p.until = p.from + frames;
   p.buttons = buttons;
+  p.lx = lx;
+  p.ly = ly;
+  p.buttons_from = p.from + buttons_after;
   g_presses.push_back(p);
   g_press_next = p.until + kReleaseFrames;
 }
