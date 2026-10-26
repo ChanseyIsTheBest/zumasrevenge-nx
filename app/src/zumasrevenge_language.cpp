@@ -33,7 +33,6 @@ std::string FromSystem(std::string* system_name) {
   }
   if (!read) return "en";
   switch (language) {
-    case SetLanguage_JA: return "ja";
     case SetLanguage_FR:
     case SetLanguage_FRCA: return "fr";
     case SetLanguage_DE: return "de";
@@ -42,7 +41,7 @@ std::string FromSystem(std::string* system_name) {
     case SetLanguage_ES419: return "es";
     case SetLanguage_PT:
     case SetLanguage_PTBR: return "pt";
-    default: return "en";  // English (US, GB), Chinese, Korean, Dutch, Russian: Bejeweled 3 has none of these
+    default: return "en";  // English (US, GB), Japanese, Chinese, Korean, Dutch, Russian: the game has none of these
   }
 #elif defined(_WIN32)
   const LANGID id = GetUserDefaultUILanguage();
@@ -52,7 +51,6 @@ std::string FromSystem(std::string* system_name) {
     *system_name = name;
   }
   switch (PRIMARYLANGID(id)) {
-    case LANG_JAPANESE: return "ja";
     case LANG_GERMAN: return "de";
     case LANG_FRENCH: return "fr";
     case LANG_SPANISH: return "es";

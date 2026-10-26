@@ -123,3 +123,15 @@ presentation interval is +14000 (Renut's `kPresentInterval` 0x36B0; the frame ho
   (`sub_82309B78`), not Swap. Checked and correct: the quad's vertices (1280x720 in pixels, `video3`'s stream dump),
   Renut's ViewportEnable against the game's setter, the automatic back / front buffer words (+15236 / +15232). Not yet
   found. Those frames also skip the frame hook (on Swap): 127 a second on the PC, whose window has no vsync.
+
+## Languages (2026-10-27)
+
+- **The game's six:** `main.rsb` holds six string tables, named by their `<String id="LOCALE">`: English_United States,
+  German_Germany, Spanish_Spain, French_France, Italian_Italy, Portuguese_Brazil. The game's only XGetLanguage call is
+  the C runtime's locale set-up (`sub_82304050`), from which the framework picks its table.
+- **The port's option** (`zumasrevenge_language`, from Bejeweled 3's: en, ja, de, fr, es, it, pt) is now en, de, fr, es,
+  it and pt; an empty option follows the system (Japanese, Chinese, Korean and the rest give en).
+- **PC runs** `lang_<xx>` (Renut, 40 s each, `REX_ZUMASREVENGE_LANGUAGE=<xx>`; `out/renut_tests/languages.jpg`): each of
+  the six shows its own title prompt ("Drücke A zum Fortfahren", "Appuyer sur A pour continuer", "Pulsa A para
+  continuar", "Premi A per continuare", "Aperte A para continuar") and the story's first lines in its language;
+  `ja` (user_language 2) shows English, as the game has no Japanese.

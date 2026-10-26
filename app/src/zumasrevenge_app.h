@@ -39,7 +39,7 @@
 
 // The game's language (the user's request, 2026-10-13): see OnPostInitLogging.
 REXCVAR_DEFINE_STRING(zumasrevenge_language, "", "ZumasRevenge",
-                      "The game's language: en, ja, de, fr, es, it or pt; empty = the system's language (English when "
+                      "The game's language: en, de, fr, es, it or pt; empty = the system's language (English when "
                       "the game does not have it)");
 REXCVAR_DECLARE(uint32_t, user_language);  // the SDK's (xam_user.cpp)
 
@@ -94,9 +94,11 @@ class ZumasRevengeApp : public rex::ReXApp {
     if (rex::cvar::GetFlagSource("gpu_plugin") == rex::cvar::Source::kDefault) {
       rex::cvar::SetFlagByName("gpu_plugin", "xenos");
     }
-    // zumasrevenge_language: the game's language by name (main.rsb holds the string tables of en, de, es, fr, it, ja and
-    // pt: the seven copies of <String id="293">, "Play Classic"). It sets the SDK's user_language, which XGetLanguage
-    // reports to the game (the XDK's language numbers).
+    // zumasrevenge_language: the game's language by name. zumasrevenge-nx (2026-10-27): main.rsb holds six string
+    // tables (<String id="LOCALE"> English_United States, German_Germany, Spanish_Spain, French_France,
+    // Italian_Italy, Portuguese_Brazil); the C runtime sets its locale from XGetLanguage (sub_82304050), any other
+    // language shows English. It sets the SDK's user_language, which XGetLanguage reports to the game (the XDK's
+    // language numbers).
     // Empty: the system's language (zumasrevenge_language.cpp), unless user_language was set to another than English.
     std::string language = REXCVAR_GET(zumasrevenge_language);
     if (language.empty() && REXCVAR_GET(user_language) == 1) {
@@ -106,7 +108,7 @@ class ZumasRevengeApp : public rex::ReXApp {
     }
     if (!language.empty()) {
       static const std::pair<const char*, const char*> kLanguages[] = {
-          {"en", "1"}, {"ja", "2"}, {"de", "3"}, {"fr", "4"}, {"es", "5"}, {"it", "6"}, {"pt", "9"}};
+          {"en", "1"}, {"de", "3"}, {"fr", "4"}, {"es", "5"}, {"it", "6"}, {"pt", "9"}};
       const char* id = nullptr;
       for (const auto& [name, value] : kLanguages) {
         if (language.size() >= 2 && std::tolower(static_cast<unsigned char>(language[0])) == name[0] &&
@@ -118,7 +120,7 @@ class ZumasRevengeApp : public rex::ReXApp {
         rex::cvar::SetFlagByName("user_language", id);
         REXLOG_INFO("[language] \"{}\": user_language = {}", language, id);
       } else {
-        REXLOG_WARN("[language] zumasrevenge_language = \"{}\" is not one of en, ja, de, fr, es, it, pt: unchanged",
+        REXLOG_WARN("[language] zumasrevenge_language = \"{}\" is not one of en, de, fr, es, it, pt: unchanged",
                     language);
       }
     }

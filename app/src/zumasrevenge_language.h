@@ -7,9 +7,9 @@
 
 namespace zumasrevenge::language {
 
-// The system language as one of the game's nine (en, ja, de, fr, es, it, ko, zh, pt): both Chinese scripts give zh
-// (the game has traditional Chinese only), regional variants their language, and any other language (Dutch, Russian)
-// or a system language that cannot be read gives en. `system_name` receives the system's own name for it, for the log.
+// The system language as one of the game's six (en, de, fr, es, it, pt): regional variants give their language
+// (Brazilian and European Portuguese both pt), and any other language (Japanese, Chinese, Korean, Dutch, Russian) or a
+// system language that cannot be read gives en. `system_name` receives the system's own name for it, for the log.
 std::string FromSystem(std::string* system_name = nullptr);
 
 }  // namespace zumasrevenge::language
