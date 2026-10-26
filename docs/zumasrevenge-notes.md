@@ -135,3 +135,24 @@ presentation interval is +14000 (Renut's `kPresentInterval` 0x36B0; the frame ho
   the six shows its own title prompt ("Drücke A zum Fortfahren", "Appuyer sur A pour continuer", "Pulsa A para
   continuar", "Premi A per continuare", "Aperte A para continuar") and the story's first lines in its language;
   `ja` (user_language 2) shows English, as the game has no Japanese.
+
+## The first Switch build (2026-10-27)
+
+- **Shaders:** XenosRecomp with `BANJO_HLSL_OVERRIDE` / `BANJO_DEKO3D_SPIRV_DIR` (docs/building.md, section 3), then
+  `deko3d_shaders.py` (75 of 75 compile with uam: 66 vertex, median 35 KB, the largest 206 KB; 9 pixel of about 1 KB),
+  `deko3d_glsl_opt.py --check`, `deko3d_shader_package.py` (531 KB), `renut_switch_shader_cache.py`. The NRO carries
+  all 75: the image's containers are the ones the game and its libraries can create, and the 4 the run made.
+- **Build:** `tools/win/build_switch.ps1 -Pgo none -Define "ZUMASREVENGE_SWITCH_LTO=OFF"` (development: no LTO, no PGO).
+  NRO 38.6 MB, "Zuma's Revenge!" 0.1.0, the game's `ZumasRevenge_Icon.png` (64x64) scaled to 256x256 as the
+  development icon (`out/icon_dev.jpg`; game data, not committed).
+- **`tools/check_switch_build.py`:** all checks passed once Xbox360AppDriver::DoExit `sub_82555090` (it logs
+  "Xbox360AppDriver::DoExit(): %d" and stops at its own `b .`) went into KNOWN_HALTS; 393 vector fused multiply-adds in
+  44 functions (the generated code's `vmx_madd_ps`).
+- **Ryujinx** (`emu1`, 200 s; SD `switch\zumasrevenge-nx` a junction to `out/emu_sd/zumasrevenge-nx`;
+  `tools/build_asset_pack.py` made the game pack, 6 files, 372 MB; `out/zr_emu_script.txt`): **the intro video plays**
+  (the PopCap logo, the flag, the storm, the frog's raft, the title's reveal: the black video is the PC's alone), then
+  the title, the story, the island map and level 1-1 played (matches, combos, a ball chain to the skull). 43.6-60.0
+  game frames a second in 10 s windows (57-60 in most of the level's, 47.4 in one), Renut's render thread 1.4-2.8 ms a
+  frame, no error in the log.
+- **Delivered:** `out/dist/dev_20261027_zumasrevenge/zumasrevenge-nx/` (NRO `a4dd0384...`, the game pack, README.txt);
+  ELF and map `out/nx/elf/zumasrevenge_dev_20261027.*`.

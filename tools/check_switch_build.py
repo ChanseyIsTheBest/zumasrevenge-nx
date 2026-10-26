@@ -44,8 +44,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # `bdnz` whose exit is the `bge` before it (the counter never runs out): a trap the CRT left in.
 # zuma-nx (2026-10-26): Zuma's memcpy sub_82113040 is Feeding Frenzy's byte for byte: the same three `b .`
 # (0x82113204, 0x82113334, 0x82113444).
-# zumasrevenge-nx (2026-10-27): none known yet (the memcpy is Peggle 2's, which has no `b .`).
-KNOWN_HALTS = []
+# zumasrevenge-nx (2026-10-27): the memcpy is Peggle 2's, which has no `b .`. Xbox360AppDriver::DoExit sub_82555090
+# logs "Xbox360AppDriver::DoExit(): %d" (sub_82442338) and stops at its `b .` (0x825550A8): the game's own end.
+KNOWN_HALTS = ['sub_82555090']
 # Vector fused multiply-adds that come from the guest's OWN fused operations (fmadds -> std::fma), two of them paired
 # into one vector instruction by GCC (exact: each lane is the same fused operation). Checked in the disassembly:
 # fcvtl to double, fmla v.2d, fcvtn back, as double(float(std::fma(a, b, c))) twice.
