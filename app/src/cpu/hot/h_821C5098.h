@@ -12,12 +12,12 @@
 //     not 0 and no destination pointer wraps to 0 (no element is skipped), neither range wraps past 4 GB nor straddles
 //     0xE0000000 (host memory 4 KB higher from there on the PC), and the two ranges do not overlap: then the element
 //     copies are independent and together are one copy of the span, in any order;
-//   - the context as the copy leaves it: r3 = dest + 36 * count, r4 = first + 36 * (count - 1) and r5 = 36 (the last
-//     call's arguments, which memcpy's native leaves), r12 as the copy's dead definition (the entry lr), lr = 0x821C50D0
-//     (set before each call), r1 unchanged, and the copy's back-chain store at r1 - 112 (REX_CHAIN_STORE);
+//   - - the context as the copy leaves it: r3 = dest + 36 * count, r4 = first + 36 * (count - 1) and r5 = 36 (the last
+//     call's arguments, which memcpy's native leaves), r12 as the copy's dead definition (the entry lr), lr =
+//     0x821C50D0 (set before each call), r1 unchanged, and the copy's back-chain store at r1 - 112 (REX_CHAIN_STORE);
 //   - everything else (first == last, memcpy's native off, any of the cases above) runs the copy, n_821C5098::Native.
-// Calls: none (the copy's calls are memcpy's native, reproduced), but the copy it falls back to calls, so the hook stays
-// unguarded.
+// Calls: none (the copy's calls are memcpy's native, reproduced), but the copy it falls back to calls, so the hook
+// stays unguarded.
 #pragma once
 
 // n_821C5098.h (the copy) is included just before this file by app/generated/hot/localized_hooks.inc.

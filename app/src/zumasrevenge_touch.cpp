@@ -8,10 +8,19 @@
 //   - each takes a SexyTouch (+8 x, +12 y, +16 previous x, +20 previous y, in the game's coordinates). TouchBegan moves
 //     the mouse there (WidgetManager::MouseMove sub_8241EE50), finds the widget under it (GetWidgetAt sub_8241E950),
 //     makes the point local to it and calls the widget's TouchBegan; a widget that does not override it gets
-//     MouseDown(x, y, 1) (Widget's defaults), the PC game's mouse handling: the buttons and dialogs, and the level's
-//     Board (vtable 0x820032BC: its own MouseMove 8218F790 and MouseDown 821AA798, the PC version's aim and shot).
+//     MouseDown(x, y, 1) (Widget's defaults), the PC game's mouse handling: the dialogs' buttons (ZumaDialogButton:
+//     the pause menu, Help & Options, How To Play ...) take taps as they are.
 // Nothing calls those three on the console. This file calls them on the game's own thread, between frames (from the
 // D3DDevice_Swap hook, zumasrevenge_frame_hooks.cpp), with the touches queued since the previous frame.
+//
+// The console's own screens take no mouse input, so a tap there goes the pad's way (input_script::Press, the touch
+// controls' pad merged into player 1), each by its class (RTTI):
+//   - the button prompts' layers (ButtonCalloutWidget, one a screen) leave the mouse's hit test, and a tap on a prompt
+//     ("A Select", "B Back") presses its button;
+//   - the title (LoadingScreen): A;
+//   - the main menu (MainMenu): the tapped entry selected, then A;
+//   - a level (Board): the frog aimed at the tap (the PC game's mouse aim and the stick), then A;
+//   - any other whole-screen widget without mouse input (the story, the island map, a level's end): A.
 //
 // The app object: SexyAppBase's constructor (sub_8243FB90: stores the SexyAppBase vtables 0x820B04AC / 0x820B049C at
 // +0 / +4; called once, from SexyApp's sub_824207E8) is hooked to keep `this`. (sub_8243F260, which also names those
@@ -90,6 +99,19 @@ constexpr MenuEntry kMainMenuEntries[] = {
     {970, 516, 1065, 600, 512},  // X
 };
 constexpr uint16_t kPadA = 0x1000;  // XINPUT_GAMEPAD_A
+constexpr uint32_t kWidgetVisible = 0x50;  // Widget::mVisible
+constexpr int32_t kPromptTop = 628, kPromptBottom = 692;  // the prompts' row, screen pixels
+
+// PopCap's pad buttons (the main menu's handler: 0-3 the directions, 4 START, 6 A) as XInput bits.
+uint16_t PadOfPrompt(uint32_t button) {
+  switch (button) {
+    case 6: return 0x1000;  // A
+    case 7: return 0x2000;  // B
+    case 8: return 0x4000;  // X
+    case 9: return 0x8000;  // Y
+    default: return 0;
+  }
+}
 
 std::atomic<uint32_t> g_app{0};
 
@@ -335,28 +357,51 @@ void Dispatch(PPCContext& ctx, uint8_t* base) {
     if (t.phase == Phase::kBegan && g_down) continue;  // one touch at a time (bejeweled3-nx)
     if (t.phase != Phase::kBegan && !g_down) continue;  // the game never saw its start
     if (t.phase == Phase::kBegan) {
-      uint32_t widget = widget_at(x, y);
-      // The button prompts' layer ("A Shoot", "A Continue"): a whole-screen ButtonCalloutWidget over the board and
-      // the screens, which takes no mouse input and so hid everything under it from taps. It leaves the mouse's
-      // hit test (WidgetContainer's, sub_824177F8: mMouseVisible, +0x51), as the console game never uses the mouse.
-      for (int k = 0; k < 4 && widget && Load32(base, widget) == kButtonCalloutVtable; ++k) {
-        if (REXCVAR_GET(zumasrevenge_touch_log)) {
-          const uint32_t first = Load32(base, widget + 160), last = Load32(base, widget + 164);
-          for (uint32_t e = first; e && e < last && e < first + 48 * 8; e += 48) {
-            std::string words;
-            for (uint32_t o = 0; o < 48; o += 4) {
-              const uint32_t w = Load32(base, e + o);
-              float f;
-              std::memcpy(&f, &w, 4);
-              words += fmt::format(" {:X}:{}/{:.1f}", o, int32_t(w), f);
-            }
-            REXLOG_INFO("[touch] callout entry 0x{:08X}:{}", e, words);
+      // The button prompts' layers ("A Select", "B Back", "A Shoot" ...): a whole-screen ButtonCalloutWidget over a
+      // screen, which takes no mouse input and so hid everything under it from taps. Each leaves the mouse's hit test
+      // (WidgetContainer's, sub_824177F8: mMouseVisible, +0x51), as the console game never uses the mouse, and its
+      // prompts are taken by their place instead: it keeps them at +160 / +164 (begin / end, 48 bytes each: +0 PopCap's
+      // pad button, 6 A, 7 B, 8 X, 9 Y; +4 the label; +0x24 the width and +0x28 the left edge, in screen pixels), drawn
+      // on one row at the bottom (y 637-680 on every screen seen). The layers are found in the widget tree (each
+      // container's children: an MSVC std::list at +4, node +4 the previous, +8 the widget, walked from the top as the
+      // hit test does), the visible ones only, each screen having its own.
+      const int32_t screen_x = x - left, screen_y = y - top;
+      std::vector<uint32_t> callouts;
+      auto find_callouts = [&](auto&& self, uint32_t container, int depth) -> void {
+        const uint32_t head = depth < 8 ? Load32(base, container + 4) : 0;
+        if (!head) return;
+        uint32_t node = Load32(base, head + 4);
+        for (int n = 0; node && node != head && n < 512; ++n) {
+          const uint32_t w = Load32(base, node + 8);
+          if (w && base[w + kWidgetVisible]) {
+            if (Load32(base, w) == kButtonCalloutVtable) callouts.push_back(w);
+            self(self, w, depth + 1);
           }
+          node = Load32(base, node + 4);
         }
-        base[widget + kWidgetMouseVisible] = 0;
-        if (REXCVAR_GET(zumasrevenge_touch_log)) REXLOG_INFO("[touch] callout layer 0x{:08X}: mouse-invisible", widget);
-        widget = widget_at(x, y);
+      };
+      find_callouts(find_callouts, manager, 0);
+      uint16_t prompt = 0;
+      for (const uint32_t c : callouts) {
+        if (base[c + kWidgetMouseVisible]) {
+          base[c + kWidgetMouseVisible] = 0;
+          if (REXCVAR_GET(zumasrevenge_touch_log)) REXLOG_INFO("[touch] callout layer 0x{:08X}: mouse-invisible", c);
+        }
+        if (prompt || screen_y < kPromptTop || screen_y >= kPromptBottom) continue;
+        const uint32_t first = Load32(base, c + 160), last = Load32(base, c + 164);
+        for (uint32_t e = first; e && e < last && e < first + 48 * 8; e += 48) {
+          const int32_t px = int32_t(Load32(base, e + 0x28)), pw = int32_t(Load32(base, e + 0x24));
+          if (screen_x >= px && screen_x < px + pw) prompt = PadOfPrompt(Load32(base, e));
+        }
       }
+      if (prompt) {
+        zumasrevenge::input_script::Press(prompt, 4);
+        if (REXCVAR_GET(zumasrevenge_touch_log)) {
+          REXLOG_INFO("[touch] prompt at ({}, {}): pad {:04X}", screen_x, screen_y, prompt);
+        }
+        continue;
+      }
+      const uint32_t widget = widget_at(x, y);
       // A level (the Board): the touch aims the frog (the PC game's Board::MouseMove, which WidgetManager::TouchBegan
       // calls first), and the console's own shot follows: A (Board::MouseDown, the PC's click, ends early in the
       // console game's state).
@@ -369,7 +414,8 @@ void Dispatch(PPCContext& ctx, uint8_t* base) {
         widget_at(x, y, &lx, &ly);
         int16_t sx = 0, sy = 0;
         if (const uint32_t gun = Load32(base, widget + kBoardGun); gun && Load32(base, gun) == kGunVtable) {
-          const float dx = float(lx) - LoadF32(base, gun + kGunCentre), dy = float(ly) - LoadF32(base, gun + kGunCentre + 4);
+          const float dx = float(lx) - LoadF32(base, gun + kGunCentre);
+          const float dy = float(ly) - LoadF32(base, gun + kGunCentre + 4);
           const float len = std::sqrt(dx * dx + dy * dy);
           if (len >= 1.0f) {
             sx = int16_t(dx / len * 30000.0f);

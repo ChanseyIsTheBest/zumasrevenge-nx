@@ -1,20 +1,20 @@
 // h_826067D8.h: hand-written native of sub_826067D8, the XDK's XMemSet (r3 = dst, r4 = the byte value in its low 8
 // bits, r5 = n; returns r3 = dst): bytes one at a time below 16; else stvlx up to the 16-byte boundary, 16-byte stvx to
-// the 128-byte one, dcbz128 lines (for a zero value; for another, dcbz128 four lines ahead and eight stvx a line), 16-byte
-// stvx, then stvrx for the last bytes. Reference: app/generated/hot/n_826067D8.h (docs/hand-natives.md). The hottest
-// generated function of the Ryujinx profile (out/renut_tests/emu/prof1: 361 samples, a game thread's 15 %).
+// the 128-byte one, dcbz128 lines (for a zero value; for another, dcbz128 four lines ahead and eight stvx a line),
+// 16-byte stvx, then stvrx for the last bytes. Reference: app/generated/hot/n_826067D8.h (docs/hand-natives.md). The
+// hottest generated function of the Ryujinx profile (out/renut_tests/emu/prof1: 361 samples, a game thread's 15 %).
 //
-// Optimisation: one host memset of [dst, dst + n), instead of the byte, 16-byte and 128-byte stores; the loops' register
-// arithmetic in closed form.
+// Optimisation: one host memset of [dst, dst + n), instead of the byte, 16-byte and 128-byte stores; the loops'
+// register arithmetic in closed form.
 // Audit:
-//   - memory: every path writes each byte of [dst, dst + n) and nothing else, with the byte r4 & 0xFF: the n < 16 loop
-//     stores the low byte of extsb(r4); for n >= 16, v0 is that byte splatted (lvsl of r4 and of r4 >> 4, vslb by 4,
-//     vor, vspltb 0: the copy's own three operations are kept here, so v0 is the copy's); the head is the 16 - (dst & 15)
-//     bytes to the boundary when dst is not aligned, then min(n' >> 4, the 16-byte units to the 128 boundary) units
-//     (n' = n less the head), then (n'' >> 7) lines (n'' = n' less those units), then the 16-byte units of the rest and
-//     its last (rest & 15) bytes. The non-zero path's dcbz128 at +512 only clears a line a later pass of the same loop
-//     fills (j + 4 < lines), so the bytes at the end are the value's. The 16-byte stores advance by the word at
-//     0x82981FB4 (16 in the image): any other value takes the copy;
+//   - - memory: every path writes each byte of [dst, dst + n) and nothing else, with the byte r4 & 0xFF: the n < 16
+//     loop stores the low byte of extsb(r4); for n >= 16, v0 is that byte splatted (lvsl of r4 and of r4 >> 4, vslb by
+//     4, vor, vspltb 0: the copy's own three operations are kept here, so v0 is the copy's); the head is the 16 - (dst
+//     & 15) bytes to the boundary when dst is not aligned, then min(n' >> 4, the 16-byte units to the 128 boundary)
+//     units (n' = n less the head), then (n'' >> 7) lines (n'' = n' less those units), then the 16-byte units of the
+//     rest and its last (rest & 15) bytes. The non-zero path's dcbz128 at +512 only clears a line a later pass of the
+//     same loop fills (j + 4 < lines), so the bytes at the end are the value's. The 16-byte stores advance by the word
+//     at 0x82981FB4 (16 in the image): any other value takes the copy;
 //   - registers: the copy writes back r3-r12, v0, v12 and v13 and leaves lr = 0x826067E0 (the restgprlr tail is its
 //     own: r29-r31 are locals of the copy). Each is set here to the copy's value on the path taken (n == 0, n < 16, the
 //     zero value's path and the other one), the counts as the copy's 64-bit adds over u32 trip counts;
