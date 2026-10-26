@@ -72,3 +72,54 @@ renut_device_offsets_zr.py` (bejeweled3-nx's tool with its value columns switche
 above, which gives the +17120 bejeweled3-nx's notes name for Peggle 2) and 11 text sites from peggle2-nx's own lines
 (the delta chain's private range 11008-12223 and 40 chunks, the declaration offset 0x3118, the chain ranges). The
 presentation interval is +14000 (Renut's `kPresentInterval` 0x36B0; the frame hook reads it).
+
+## Renut's hooks at Zuma's Revenge's addresses (2026-10-27)
+
+`tools/renut_hook_remap_zr.py` (one-off, run once) moved the 326 active hook lines of Bejeweled 3's Direct3D layer:
+
+- **222 state functions** from the two state tables ({getter, setter, default} rows, stride 12): Bejeweled 3's
+  `0x82AD01E8` (101 rows) / `0x82AD06A8` (20), Zuma's Revenge's `0x82974578` / `0x82974A38`, found as the only places
+  whose default columns equal Bejeweled 3's word for word; the same row and column is the same function.
+- **97 API functions** by the anchor alignment of the two libraries (`out/renut_map/anchor.txt`).
+- **7 by reading them side by side**, which the alignment left unpaired: Clear `8230AF08`, ClearF `8230ADD0`, Present
+  `82309B78`, Swap `82309410` (the shared hook), SetSurfaceClip `8230AFC8`, SetRingBufferParameters `8231AD10`,
+  EndIndexedVertices `8231B0D8`.
+- The 30 lines in `#if 0` (functions Bejeweled 3 does not link, at their Peggle 2 addresses) stay as they are. None of
+  those functions is linked here either: every Direct3D function the game calls (`out/renut_map/zr_d3d_calls.txt`, 149
+  targets of `bl` from outside 0x82305000-0x82331000) is a hooked one, one Bejeweled 3 calls unhooked too, or a thunk
+  / one-word getter (`82309408` -> SynchronizeToPresentationInterval, `823178C8`, `82308470`).
+- The raw shader hooks' guest calls (`__imp__sub_823142B0` / `82314308`, GetFunction) by hand.
+
+**Guest data**, each read at the same instruction of the aligned function as Bejeweled 3's use:
+
+| What | Zuma's Revenge | Bejeweled 3 | Check |
+|---|---|---|---|
+| state tables | `0x82974578` / `0x82974A38` | `0x82AD01E8` / `0x82AD06A8` | the defaults equal |
+| format table | `0x8205EAA0` | `0x82001620` | 128 bytes equal (9 uses) |
+| caps | `0x82061EC0` | `0x82001830` | 304 bytes equal |
+| full viewport | `0x8205E9D0` | `0x82001284` | 24 bytes equal |
+| build qword | `0x82974B28` | `0x82AD07A0` | `0x0002000051874000` (20871) |
+| `VdGlobalDevice` slot | `0x82000610` | `0x82000618` | holds `0xFFCAE000` (`0x8200060C`: `0xFFCAD000`) |
+| HiZ owner | `0x829C4CC0` | `0x82B113E0` | 3 uses |
+| export switches | `0x829C4CDC` / `0x829C4CE0` | `0x82B103B0` / `0x82B103B4` | |
+| no-large-pages flag | `0x829C3C98` | `0x82B10380` | 2 uses |
+| XMemFree | `sub_82605D80` | `sub_825F8670` | 90 call sites |
+| GetCurrentThreadId | `sub_82605DB0` | `sub_825F8690` | 8 call sites |
+
+## Renut on the PC (2026-10-27)
+
+- **Shaders:** the trace build (`-DZUMASREVENGE_RENUT_RENDERER=OFF`, `app/src/zumasrevenge_d3d_trace.cpp` on
+  Direct3D_CreateDevice and the shader / declaration creators) played to level 1-1 (`trace1`, 170 s): the game creates
+  14 shaders, 4 of them pixel shaders not stored whole in `default.xex` (`ps_033c7dd9...`, `ps_6d814720...`,
+  `ps_2ec3eb23...`, `ps_634940fe...`, each created twice). With the image's 71 (66 vertex, 5 pixel: the game's and the
+  libraries') Renut's dump holds 75 (`out/renut_shader_dump`; the run's, named by XXH3, in `out/zr_shaders`).
+- **`renut1`** (Vulkan, 120 s, the same input as `trace1`): the title, the story, the island map and level 1-1
+  ("Shipwrecked!") played as on the emulated GPU; 60 game frames a second from the title on, Renut's render thread
+  0.5-0.7 ms and the GPU 1.3-2.1 ms a frame; no shader missing, no warning.
+- **Known issue: the PopCap intro video is black** (about 10 s at start; the game from the title on is drawn). The
+  movie player (XMV, `0x82330000-0x82334800`) draws each frame as one quad (`vs_9d7d9f03...` / `ps_24718044...`, three
+  linear planes it fills between LockRect `sub_82310708` and UnlockRect `sub_8230EEC8`, ViewportEnable off, its own
+  sampler words written into the device at +1152 / +1176 / +1200) and presents with D3DDevice_Present
+  (`sub_82309B78`), not Swap. Checked and correct: the quad's vertices (1280x720 in pixels, `video3`'s stream dump),
+  Renut's ViewportEnable against the game's setter, the automatic back / front buffer words (+15236 / +15232). Not yet
+  found. Those frames also skip the frame hook (on Swap): 127 a second on the PC, whose window has no vsync.

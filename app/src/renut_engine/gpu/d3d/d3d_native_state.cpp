@@ -729,8 +729,8 @@ constexpr SamplerStateFn kSamplerStateFns[kSamplerStates] = {
 // N&B's state tables: {getter, setter, default} per state.
 // bejeweled3-nx: Bejeweled 3's tables, found by N&B's 101 / 20 default values (stride 12; the only match each), loaded
 // only by D3D_InitializeApiState sub_82310D70. Peggle 2 0x828DFDB8 / 0x828E0278, Peggle 1 0x82F85848 / 0x82F85D08.
-constexpr u32 kRenderStateTable = 0x82AD01E8;  // bejeweled3-nx: N&B 0x82E506F0
-constexpr u32 kSamplerStateTable = 0x82AD06A8;  // bejeweled3-nx: N&B 0x82E50BD0
+constexpr u32 kRenderStateTable = 0x82974578;  // zumasrevenge-nx (Bejeweled 3 0x82AD01E8, N&B 0x82E506F0)
+constexpr u32 kSamplerStateTable = 0x82974A38;  // zumasrevenge-nx (Bejeweled 3 0x82AD06A8, N&B 0x82E50BD0)
 constexpr u32 kTextureSamplers = 26;
 
 u32 TableWord(u32 table, u32 index, u32 field) {
@@ -1371,7 +1371,7 @@ namespace {
 // depth format (word_820052F8).
 // bejeweled3-nx: 0x82001620 (GetLevelLayout sub_823018B0, GetSubresourceLayout, Lock2DSurface, FindTextureSize, ...:
 // `lis r11,-32256; addi r11,r11,5664`, 7 aligned uses where Peggle 2 has 0x8207A590); 128 bytes identical to N&B's.
-constexpr u32 kFormatTable = 0x82001620;  // bejeweled3-nx: N&B 0x820052F8, Peggle 1 0x8206FBB8
+constexpr u32 kFormatTable = 0x8205EAA0;  // zumasrevenge-nx (Bejeweled 3 0x82001620, N&B 0x820052F8)
 // The register packets between RB_COPY_CONTROL and RB_COPY_DEST_INFO.
 constexpr u32 kCopyControl = 0x2A18;
 constexpr u32 kCopyDestInfo = 0x2A24;
@@ -1620,8 +1620,8 @@ constexpr u32 kExportFlags = 0x3658;
 // N&B's switches for the two GPU workarounds below (dword_82FAD204/208).
 // bejeweled3-nx: DoBeginExportNanVertex sub_822F92C8 reads [0x82B103B0] (`lis r11,-32079; lwz r11,944(r11)`) where
 // Peggle 2's sub_82616D78 reads 0x82D75090; DoEndExport512Pixels sub_822F9420 reads [0x82B103B4] (Peggle 2 0x82D75094).
-constexpr u32 kSkipExportNanVertex = 0x82B103B0;  // bejeweled3-nx: N&B 0x82FAD204, Peggle 1 0x83024420
-constexpr u32 kSkipExport512Pixels = 0x82B103B4;  // bejeweled3-nx: N&B 0x82FAD208, Peggle 1 0x83024424
+constexpr u32 kSkipExportNanVertex = 0x829C4CDC;  // zumasrevenge-nx (Bejeweled 3 0x82B103B0, N&B 0x82FAD204)
+constexpr u32 kSkipExport512Pixels = 0x829C4CE0;  // zumasrevenge-nx (Bejeweled 3 0x82B103B4, N&B 0x82FAD208)
 
 u32 GuestWord(u32 va) {
   const auto *p = GuestPtr<const be_u32>(va);

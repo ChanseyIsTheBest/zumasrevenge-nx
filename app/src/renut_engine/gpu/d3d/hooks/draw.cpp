@@ -51,7 +51,7 @@ constexpr u32 kE_OUTOFMEMORY = 0x8007000Eu;
 // the whole surface.
 // bejeweled3-nx: 0x82001284 (SetSurfaceInfo sub_822F3500 `lis r10,-32256; addi r4,r10,4740` where Peggle 2's
 // sub_8261ADB0 has 0x8207A610); its 24 bytes are the same (0, 0, 0xFFFF, 0xFFFF, 0.0, 1.0).
-constexpr u32 kFullViewport = 0x82001284;  // bejeweled3-nx: N&B 0x820018DC, Peggle 2 0x8207A610, Peggle 1 0x8206FEC8
+constexpr u32 kFullViewport = 0x8205E9D0;  // zumasrevenge-nx (Bejeweled 3 0x82001284, N&B 0x820018DC)
 // D3DRS_HIZWRITEENABLE's index in the render state table.
 constexpr u32 kRenderStateHiZWriteEnable = 97;
 
@@ -564,8 +564,8 @@ void D3DDevice_SetPixelShader_hook(u32 device, u32 shader) {
 
 } // namespace
 
-BANJO_RENUT_HOOK(sub_82309FE8, D3DDevice_DrawVertices_hook);  // D3DDevice_DrawVertices  // N&B sub_8222C7A0
-BANJO_RENUT_HOOK(sub_8230A400, D3DDevice_DrawIndexedVertices_hook);  // D3DDevice_DrawIndexedVertices  // N&B sub_826567C8
+BANJO_RENUT_HOOK(sub_8231B5A8, D3DDevice_DrawVertices_hook);  // D3DDevice_DrawVertices  // N&B sub_8222C7A0
+BANJO_RENUT_HOOK(sub_8231B9C0, D3DDevice_DrawIndexedVertices_hook);  // D3DDevice_DrawIndexedVertices  // N&B sub_826567C8
 #if 0  // bejeweled3-nx: N&B sub_82230838 (D3DDevice_DrawIndexedTessellatedVertices) is not linked in Bejeweled 3
 BANJO_RENUT_HOOK(sub_8243C578, D3DDevice_DrawIndexedTessellatedVertices_hook);  // D3DDevice_DrawIndexedTessellatedVertices  // N&B sub_82230838
 #endif
@@ -575,23 +575,23 @@ BANJO_RENUT_HOOK(sub_8243B2A0, D3DDevice_DrawVerticesUP_hook);  // D3DDevice_Dra
 #if 0  // bejeweled3-nx: N&B sub_82656728 (D3DDevice_DrawIndexedVerticesUP) is not linked in Bejeweled 3
 BANJO_RENUT_HOOK(sub_8243B818, D3DDevice_DrawIndexedVerticesUP_hook);  // D3DDevice_DrawIndexedVerticesUP  // N&B sub_82656728
 #endif
-BANJO_RENUT_HOOK(sub_82309B28, D3DDevice_BeginVertices_hook);  // D3DDevice_BeginVertices  // N&B sub_8222CC50
-BANJO_RENUT_HOOK(sub_822F4D40, D3DDevice_ClearF_hook);  // D3DDevice_ClearF  // N&B sub_822811A0
-BANJO_RENUT_HOOK(sub_822F4E78, D3DDevice_Clear_hook);  // D3DDevice_Clear  // N&B sub_822812C8
+BANJO_RENUT_HOOK(sub_8231B0E8, D3DDevice_BeginVertices_hook);  // D3DDevice_BeginVertices  // N&B sub_8222CC50
+BANJO_RENUT_HOOK(sub_8230ADD0, D3DDevice_ClearF_hook);  // D3DDevice_ClearF  // N&B sub_822811A0
+BANJO_RENUT_HOOK(sub_8230AF08, D3DDevice_Clear_hook);  // D3DDevice_Clear  // N&B sub_822812C8
 // peggle1-nx: Peggle 1's D3DDevice_Resolve has N&B's signature and the game calls it directly (Peggle 2's was a
 // wrapper around an internal resolve with two more arguments).
 // bejeweled3-nx: Bejeweled 3's is Peggle 2's again: the public D3DDevice_Resolve, N&B's signature, is the 19-insn
 // wrapper sub_82301020 (the game, Present and sub_8230C2D0 call it), which calls the internal resolve sub_822FFEC8
 // with two more arguments (r6 = r7 = 0, the destination texture moved to r8). The hook sits on the wrapper.
-BANJO_RENUT_HOOK(sub_82301020, D3DDevice_Resolve_hook);  // D3DDevice_Resolve  // N&B sub_8222D6C8
+BANJO_RENUT_HOOK(sub_82327948, D3DDevice_Resolve_hook);  // D3DDevice_Resolve  // N&B sub_8222D6C8
 #if 0  // bejeweled3-nx: N&B sub_822788A0 (D3DDevice_BeginTiling) is not linked in Bejeweled 3
 BANJO_RENUT_HOOK(sub_82439A88, D3DDevice_BeginTiling_hook);  // D3DDevice_BeginTiling  // N&B sub_822788A0
 #endif
 #if 0  // bejeweled3-nx: N&B sub_82212328 (D3DDevice_EndTiling) is not linked in Bejeweled 3
 BANJO_RENUT_HOOK(sub_8243A128, D3DDevice_EndTiling_hook);  // D3DDevice_EndTiling  // N&B sub_82212328
 #endif
-BANJO_RENUT_HOOK(sub_822F97A8, D3DDevice_BeginExport_hook);  // D3DDevice_BeginExport  // N&B sub_82269618
-BANJO_RENUT_HOOK(sub_822F98A0, D3DDevice_EndExport_hook);  // D3DDevice_EndExport  // N&B sub_822693B0
-BANJO_RENUT_HOOK(sub_822F6618, D3DDevice_Present_hook);  // D3DDevice_Present  // N&B sub_82654778
-BANJO_RENUT_HOOK(sub_82304C90, D3DDevice_SetVertexShader_hook);  // D3DDevice_SetVertexShader  // N&B sub_8222A0A8
-BANJO_RENUT_HOOK(sub_82304A88, D3DDevice_SetPixelShader_hook);  // D3DDevice_SetPixelShader  // N&B sub_82226730
+BANJO_RENUT_HOOK(sub_82318320, D3DDevice_BeginExport_hook);  // D3DDevice_BeginExport  // N&B sub_82269618
+BANJO_RENUT_HOOK(sub_82318418, D3DDevice_EndExport_hook);  // D3DDevice_EndExport  // N&B sub_822693B0
+BANJO_RENUT_HOOK(sub_82309B78, D3DDevice_Present_hook);  // D3DDevice_Present  // N&B sub_82654778
+BANJO_RENUT_HOOK(sub_82312A48, D3DDevice_SetVertexShader_hook);  // D3DDevice_SetVertexShader  // N&B sub_8222A0A8
+BANJO_RENUT_HOOK(sub_82312840, D3DDevice_SetPixelShader_hook);  // D3DDevice_SetPixelShader  // N&B sub_82226730

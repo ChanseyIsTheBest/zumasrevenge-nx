@@ -1,9 +1,9 @@
-// D3D call trace (PC test aid, 2026-10-26: mapping Renut's hooks to Zuma's XDK 2135 Direct3D, docs/zumasrevenge-notes.md):
-// every function of the Direct3D library (0x82121000-0x8213B000) that code outside it calls (81, out/zumasrevenge_d3d_api.txt)
-// is hooked, but Present sub_821221C0 (the frame hook has it). With zumasrevenge_d3d_trace = <game frame>, the log gets, per
-// function: its calls up to that frame, whether r3 was the device (the word Direct3D_CreateDevice sub_82121838 fills
-// through its r8: a field of the game's renderer, +52, not a global), its first arguments and caller; and the order of
-// the calls during that frame. Off by default; the PC build only. (feedingfrenzy2-nx's trace with Zuma's addresses.)
+// D3D call trace (PC test aid; zumasrevenge-nx 2026-10-27: Renut's shader dump for Zuma's Revenge, docs/
+// zumasrevenge-notes.md): Direct3D_CreateDevice and the shader / declaration creators are hooked. With
+// zumasrevenge_d3d_trace = <game frame>, the log gets, per function: its calls up to that frame, whether r3 was the device
+// (the word Direct3D_CreateDevice fills through its r8), its first arguments and caller; and the order of the calls
+// during that frame; every shader container created goes to out/zr_shaders. Off by default; the PC build without Renut
+// only. (feedingfrenzy2-nx's trace, through zuma-nx.)
 
 #include <atomic>
 #include <cstdint>
@@ -27,7 +27,7 @@ REXCVAR_DEFINE_INT32(zumasrevenge_d3d_trace, 0, "ZumasRevenge",
 
 namespace {
 
-constexpr uint32_t kCreateDevice = 0;  // zumasrevenge-nx: comes with the mapping
+constexpr uint32_t kCreateDevice = 0x82321C30u;  // zumasrevenge-nx: Direct3D_CreateDevice
 uint32_t g_device_slot = 0;  // Direct3D_CreateDevice's r8
 struct Stat {
   uint32_t addr = 0;
@@ -65,22 +65,22 @@ void Trace(uint32_t addr, PPCContext& ctx, uint8_t* base) {
     f[0] = ctx.r3.u32; f[1] = ctx.r4.u32; f[2] = ctx.r5.u32; f[3] = ctx.r6.u32; f[4] = ctx.r7.u32;
     f[5] = uint32_t(ctx.lr);
   }
-  // The shader containers (CreatePixelShader 82125AC8, CreateVertexShader 82125BB8) and the vertex elements
-  // (CreateVertexDeclaration 82124AB8): their first 96 bytes, on the first three calls.
-  if (s->calls < 3 && (addr == 0u || addr == 0u || addr == 0u) && ctx.r3.u32) {
+  // The shader containers (CreatePixelShader 82314360, CreateVertexShader 82314548) and the vertex elements
+  // (CreateVertexDeclaration 82312D68): their first 96 bytes, on the first three calls.
+  if (s->calls < 3 && (addr == 0x82314360u || addr == 0x82314548u || addr == 0x82312D68u) && ctx.r3.u32) {
     std::string hex;
     for (uint32_t o = 0; o < 96; o += 4) hex += fmt::format(" {:08X}", Load32(base, ctx.r3.u32 + o));
     REXLOG_INFO("[d3dtrace] {:08X} r3 {:08X}:{}", addr, ctx.r3.u32, hex);
   }
-  // Every shader container created (virtual part + physical part) to out/ff_shaders/<ps|vs>_<n>.bin, for the
-  // container-version study (XDK 2571 writes version 0x0E; Renut and XenosRecomp read 0x11).
-  if ((addr == 0u || addr == 0u) && ctx.r3.u32) {
+  // Every shader container created (virtual part + physical part) to out/zr_shaders/<ps|vs>_<n>.bin, for Renut's
+  // shader dump (tools/renut_shader_dump.py names them by XXH3).
+  if ((addr == 0x82314360u || addr == 0x82314548u) && ctx.r3.u32) {
     const uint32_t c = ctx.r3.u32;
     const uint32_t size = Load32(base, c + 4) + Load32(base, c + 8);
     if (size > 0 && size < 0x40000) {
       static int n = 0;
-      const std::string path = fmt::format("out/ff_shaders/{}_{:02}.bin", addr == 0u ? "ps" : "vs", n++);
-      std::filesystem::create_directories("out/ff_shaders");
+      const std::string path = fmt::format("out/zr_shaders/{}_{:02}.bin", addr == 0x82314360u ? "ps" : "vs", n++);
+      std::filesystem::create_directories("out/zr_shaders");
       if (FILE* f = std::fopen(path.c_str(), "wb")) {
         std::fwrite(base + c, 1, size, f);
         std::fclose(f);
@@ -112,4 +112,9 @@ void Trace(uint32_t addr, PPCContext& ctx, uint8_t* base) {
 
 #define FF_D3D_TRACE(ADDR)                            extern "C" REX_FUNC(__imp__sub_##ADDR);            REX_HOOK_RAW(sub_##ADDR) {                            Trace(0x##ADDR##u, ctx, base);                     __imp__sub_##ADDR(ctx, base);                    }
 
-// zumasrevenge-nx (2026-10-27): Zuma's list removed; Zuma's Revenge's comes with the mapping of Renut's hooks.
+// zumasrevenge-nx (2026-10-27): the device's creation and the shader / declaration creators (renut_hook_remap_zr.py's
+// mapping), for the shader dump.
+FF_D3D_TRACE(82321C30)  // Direct3D_CreateDevice
+FF_D3D_TRACE(82314360)  // D3DDevice_CreatePixelShader
+FF_D3D_TRACE(82314548)  // D3DDevice_CreateVertexShader
+FF_D3D_TRACE(82312D68)  // D3DDevice_CreateVertexDeclaration

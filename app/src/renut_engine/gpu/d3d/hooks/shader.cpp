@@ -453,20 +453,20 @@ void D3DVertexShader_Bind_hook(u32 shader_va, u32 /*flags*/, u32 declaration_va,
 
 } // namespace
 
-BANJO_RENUT_HOOK(sub_82306790, D3DDevice_CreateVertexShader_hook);  // D3DDevice_CreateVertexShader  // N&B sub_8264E8B0
-BANJO_RENUT_HOOK(sub_823065A8, D3DDevice_CreatePixelShader_hook);  // D3DDevice_CreatePixelShader  // N&B sub_8264E6A8
-BANJO_RENUT_HOOK(sub_82304FB0, D3DDevice_CreateVertexDeclaration_hook);  // D3DDevice_CreateVertexDeclaration  // N&B sub_8264EA90
+BANJO_RENUT_HOOK(sub_82314548, D3DDevice_CreateVertexShader_hook);  // D3DDevice_CreateVertexShader  // N&B sub_8264E8B0
+BANJO_RENUT_HOOK(sub_82314360, D3DDevice_CreatePixelShader_hook);  // D3DDevice_CreatePixelShader  // N&B sub_8264E6A8
+BANJO_RENUT_HOOK(sub_82312D68, D3DDevice_CreateVertexDeclaration_hook);  // D3DDevice_CreateVertexDeclaration  // N&B sub_8264EA90
 #if 0  // bejeweled3-nx: N&B sub_82657048 (D3DVertexShader_Bind) is not linked in Bejeweled 3
 BANJO_RENUT_HOOK(sub_8244F6E0, D3DVertexShader_Bind_hook);  // D3DVertexShader_Bind  // N&B sub_82657048
 #endif
-BANJO_RENUT_HOOK(sub_82306698, XGRegisterVertexShader_hook);  // XGRegisterVertexShader  // N&B sub_8264E7B8
-BANJO_RENUT_HOOK(sub_82304A50, XGRegisterPixelShader_hook);  // XGRegisterPixelShader  // N&B sub_8264E670
+BANJO_RENUT_HOOK(sub_82314450, XGRegisterVertexShader_hook);  // XGRegisterVertexShader  // N&B sub_8264E7B8
+BANJO_RENUT_HOOK(sub_82312808, XGRegisterPixelShader_hook);  // XGRegisterPixelShader  // N&B sub_8264E670
 // bejeweled3-nx (2026-10-22): the shaders' GetFunction (GetShaderFunction above); not hooked in banjo-nx's tree.
-BANJO_RENUT_HOOK_RAW(sub_823064F8) {  // D3DPixelShader_GetFunction
+BANJO_RENUT_HOOK_RAW(sub_823142B0) {  // D3DPixelShader_GetFunction
   if (!GetShaderFunction(ctx, base, renut::gpu::RecordKind::PixelShader))
-    __imp__sub_823064F8(ctx, base);
+    __imp__sub_823142B0(ctx, base);
 }
-BANJO_RENUT_HOOK_RAW(sub_82306550) {  // D3DVertexShader_GetFunction
+BANJO_RENUT_HOOK_RAW(sub_82314308) {  // D3DVertexShader_GetFunction
   if (!GetShaderFunction(ctx, base, renut::gpu::RecordKind::VertexShader))
-    __imp__sub_82306550(ctx, base);
+    __imp__sub_82314308(ctx, base);
 }
