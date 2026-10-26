@@ -147,7 +147,7 @@ presentation interval is +14000 (Renut's `kPresentInterval` 0x36B0; the frame ho
   44 functions (the generated code's `vmx_madd_ps`).
 - **Ryujinx** (`emu1`, 200 s; SD `switch\zumasrevenge-nx` a junction to `out/emu_sd/zumasrevenge-nx`;
   `tools/build_asset_pack.py` made the game pack, 6 files, 372 MB; `out/zr_emu_script.txt`): **the intro video plays**
-  (the PopCap logo, the flag, the storm, the frog's raft, the title's reveal: the black video is the PC's alone), then
+  (the PopCap logo, the flag, the storm, the frog's raft, the title's reveal), then
   the title, the story, the island map and level 1-1 played (matches, combos, a ball chain to the skull). 43.6-60.0
   game frames a second in 10 s windows (57-60 in most of the level's, 47.4 in one), Renut's render thread 1.4-2.8 ms a
   frame, no error in the log.
@@ -185,3 +185,37 @@ The method is docs/optimising-functions.md, as in Zuma and both Feeding Frenzy p
   length): the main thread's median 3.93 -> 3.71 ms a game frame; 57.3 -> 58.9 game frames a second on average (5 -> 3
   of 25 windows below 58). XMemSet 314 -> 16 samples; the 36-byte copy 115 -> none (the others move both ways: the
   emulator's samples land on function entries).
+
+## Touch controls (2026-10-27)
+
+The user: "Is there symbols in the code to add touch support to zuma and zuma's revenged like bejeweled 3 ... I want all
+menu items clickable and tapping in levels shoots the ball in that direction". `app/src/zumasrevenge_touch.cpp`
+(bejeweled3-nx's method; `out/touch/notes.txt`, `out/touch/vtables*.txt`):
+
+- **The framework's touch path is linked**, as in Bejeweled 3: SexyAppBase's slots 96 / 97 / 98 jump to
+  WidgetManager's TouchBegan / TouchEnded / TouchMoved (`sub_8241EFA0` / `sub_8241F1E8` / `sub_8241F0D0`); the app
+  object from SexyAppBase's constructor `sub_8243FB90`; touches dispatched from the Swap hook between frames. The
+  widget manager's mouse rectangle is (-208, -36, 1280, 720): the game's 864x648 centred on the screen, 1:1.
+- **What takes taps as it is:** the dialogs' buttons (`ZumaDialogButton`): the pause menu, Help & Options, How To Play
+  (`touch13`). The console's own screens take none:
+  - **the button prompts' layers** (`ButtonCalloutWidget`, one a screen, whole-screen, on top) hid every tap: each now
+    leaves the mouse's hit test (its mMouseVisible, +0x51), and a tap on a prompt presses its button (the prompts at
+    +160..+164, 48 bytes: +0 PopCap's button 6 A / 7 B / 8 X / 9 Y, +0x24 width, +0x28 x; the bottom row); the layers
+    are found in the widget tree (the containers' std::list at +4) each tap (`touch16`, `touch17`: the help dialog's
+    "B Back");
+  - **the title** (`LoadingScreen`): A; **the main menu** (`MainMenu`): its selection is one bit of +228 (Spirit Temple
+    1, the four modes 2-16, the five icons 32-512), which its pad handler (slot 69, `sub_82231208`) reads at A: the
+    tapped entry is selected, then A; **other whole-screen widgets without mouse input** (the story, the map, a
+    level's end): A.
+- **A level** (`Board`): its MouseMove aims the frog at the mouse (`sub_8218C988`, from the Gun's centre at Gun
+  +0x1DC / +0x1E0; the Gun at Board +1136), but its MouseDown ends early in the console game's state. A tap aims (the
+  touch's own MouseMove) and the touch pad then holds the stick from the frog's centre towards the tap (the stick sets
+  the frog's direction outright) and presses A while it is held (`input_script::PressStick`): level 1-1's lesson
+  ("HOLD LEFT AND SHOOT") waits for a shot with the stick held, which a mouse aim alone never gave (`touch9`).
+- **Checked:** the PC, touch alone (`touch11`): the title, Adventure from the main menu, the story, the map, level 1-1's
+  lesson and play (combos, the score 1,200 -> 12,150). Ryujinx, the Switch build, touch alone (`touch_emu1`): the same
+  path, the lesson passed, combos.
+- **Not by touch:** opening the pause menu (the + button, as on the console); the levels' lily-pad hops (the
+  shoulder buttons).
+- **Delivered:** `out/dist/dev_20261027_zumasrevenge/zumasrevenge-nx/` (NRO `3307b7db...`: the optimised build with
+  touch; the README with the touch controls); ELF and map `out/nx/elf/zumasrevenge_dev_touch_20261027.*`.
