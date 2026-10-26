@@ -4,6 +4,8 @@
 //   dst < src (signed)   -> tail call of memcpy sub_822CD480 (forward: memmove for dst < src, a plain copy otherwise);
 // zuma-nx (2026-10-26): Zuma's memmove sub_821147D0 is the same code, its tail call reaching memcpy sub_82113040
 // (Feeding Frenzy's memcpy, byte for byte).
+// zumasrevenge-nx (2026-10-27): Zuma's Revenge's memmove sub_825EA7A0 is the same code, its tail call reaching
+// memcpy sub_825EA270 (Peggle 2's memcpy, byte for byte: a forward copy as well).
 //   dst > src            -> backward from dst + n / src + n: bytes down to word alignment of dst, then words (lwz/stw
 //                           when src is aligned, four lbz assembled otherwise), then the last bytes; r3 ends at dst.
 // Both paths give memmove's result (the signed compare only picks the direction; ranges far apart do not overlap), and

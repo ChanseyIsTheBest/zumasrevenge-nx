@@ -39,7 +39,7 @@ import struct
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ENTRY_POINT = 0x820CE650  # zuma-nx: the entry point (the PE header after Title Update #2; the base XEX's 0x820CDF48 moved; Feeding Frenzy's 0x820AD418)
+ENTRY_POINT = 0x82304238  # zumasrevenge-nx: the entry point (XEX header; Zuma's 0x820CE650)
 
 
 def R(n):

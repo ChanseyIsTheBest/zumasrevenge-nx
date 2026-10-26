@@ -92,9 +92,9 @@ void D3DDevice_GetViewport_hook(u32 device, mapped_u32 viewport) {
   if (!d || !viewport)
     return;
   for (u32 i = 0; i < 4; ++i)  // fctidz, the low word
-    viewport[i] = u32(native::TruncateToI64(d.F(0x32C8 + i * 4)));
-  viewport[4] = d.W(0x32D8);
-  viewport[5] = d.W(0x32DC);
+    viewport[i] = u32(native::TruncateToI64(d.F(0x32E0 + i * 4)));
+  viewport[4] = d.W(0x32F0);
+  viewport[5] = d.W(0x32F4);
 }
 
 // void D3DDevice_SetClipPlane(D3DDevice*, DWORD Index, const float *pPlane) [0x8264DAE8]
@@ -174,7 +174,7 @@ void D3DDevice_SetPixelShaderConstantI_hook(u32 device, u32 start, mapped_u32 da
 void D3DDevice_EndIndexedVertices_hook(u32 device) {
   native::Device d = native::DeviceAt(device);
   if (d)
-    d.SetW(native::off::Ring, d.W(0x3604));
+    d.SetW(native::off::Ring, d.W(0x3614));
 }
 
 // void D3DDevice_SetTexture(D3DDevice*, DWORD Sampler, D3DBaseTexture*,

@@ -98,17 +98,17 @@ constexpr u8 kDeviceFlagImmediateFences = 0x02;
 // Pointer to the completed-fence word IsFencePending / BlockOnFence read.
 constexpr u32 kDeviceOffsetFenceCompletion = 11024;
 // Nonzero while a KickOff is in progress (BlockOnFence does not kick then).
-constexpr u32 kDeviceOffsetInKickOff = 13584;
+constexpr u32 kDeviceOffsetInKickOff = 13600;
 // bejeweled3-nx: as Peggle 2 (XDK 21256), Bejeweled 3's InitializeHardwareDevice (sub_823119B0) gives the device a
 // 32-byte block at +11028 (`li r3,32; bl XMemAlloc; stw r3,11028(r31)`), which its interrupt, fence and present paths
 // read (sub_822F5000, sub_822F59F0, sub_822F6AE0, the callback writer sub_822F7898); SetRingBufferParameters
 // (sub_822F8568) only reads it. N&B's and Peggle 1's +10900 block was SetRingBufferParameters' own.
 constexpr u32 kDeviceOffsetHardwareBlock = 11028;
 // Side buffer (0x12C0 bytes) every device gets.
-constexpr u32 kDeviceOffsetSideBuffer = 17120;
+constexpr u32 kDeviceOffsetSideBuffer = 17136;
 constexpr u32 kSideBufferSize = 0x12C0;
 // Set to -1 by the device-type-2 path.
-constexpr u32 kDeviceOffsetsMinusOne[] = {21952, 21956, 15324};
+constexpr u32 kDeviceOffsetsMinusOne[] = {21968, 21972, 15340};
 constexpr u32 kDeviceTypeNoHardware = 2;
 // Copied from the global qword at 0x82AD07A0 (bejeweled3-nx: the CreateDevice part sub_82311428 `lis r11,-32083;
 // ld r11,1952(r11); std r11,11008(r3)`, as Peggle 2's sub_826292C0 with 0x828E0370; N&B 0x82F39B38). It holds the
@@ -117,10 +117,10 @@ constexpr u32 kDeviceOffsetGlobalQword = 11008;
 constexpr u32 kGlobalQwordVa = 0x82AD07A0;
 // Hardware-path fields: two critical sections, QueryPerformanceFrequency and
 // its reciprocal as floats, and 41 words set to -1.
-constexpr u32 kDeviceOffsetCriticalSection0 = 15332;
-constexpr u32 kDeviceOffsetCriticalSection1 = 15360;
-constexpr u32 kDeviceOffsetPerfFrequency = 21980;
-constexpr u32 kDeviceOffsetTitleMinusOne = 23776;
+constexpr u32 kDeviceOffsetCriticalSection0 = 15348;
+constexpr u32 kDeviceOffsetCriticalSection1 = 15376;
+constexpr u32 kDeviceOffsetPerfFrequency = 21996;
+constexpr u32 kDeviceOffsetTitleMinusOne = 23792;
 // Import slot holding the address of the kernel's VdGlobalDevice variable.
 // bejeweled3-nx: 0x82000618, which the KeGetCurrentProcessType() != 2 paths load (InitializeHardwareDevice
 // sub_823119B0, GetDevice sub_822F90C8, LockResource sub_822F9FA0, Resource_Destroy sub_822F9B08, ...: 23
@@ -181,7 +181,7 @@ bool FencePending(const u8 *bytes, u32 fence) {
 // D3D::XenonGpu_Initialize (0x82663208): the register image's power-on
 // values, everything dirty. (Its register writes go into the ring.)
 void XenonGpuInitialize(native::Device d) {
-  d.SetQ(0x2FC0, 0x00000000FFFFFFFFull);
+  d.SetQ(0x2FD8, 0x00000000FFFFFFFFull);
   for (u32 i = 0; i < 26; ++i)  // texture fetch constants: type 0
     d.SetW(native::off::TextureFetch + i * 24, d.W(native::off::TextureFetch + i * 24) & ~3u);
   for (u32 i = 0; i < 18; ++i) {  // vertex fetch constants: type 1
@@ -210,32 +210,32 @@ void XenonGpuInitialize(native::Device d) {
 
 // D3D::InitializeApiState (0x826597C8).
 void InitializeApiState(native::Device d) {
-  const u32 present_interval = d.W(0x36A0);
-  const u32 behavior_flags2 = d.W(0x5F38);
+  const u32 present_interval = d.W(0x36B0);
+  const u32 behavior_flags2 = d.W(0x5F48);
   native::InitializeStateTables(d);
-  d.SetW(0x3100, 5);
-  d.SetW(0x3104, 1);
+  d.SetW(0x3118, 5);
+  d.SetW(0x311C, 1);
   native::SetScreenExtentQueryMode(d, 2);  // D3DSEQM_PRECLIP
-  d.SetW(0x31F0, 2);
-  d.SetW(0x3138, 0x2A23B9);
-  d.SetH(0x3134, 0);
-  d.SetH(0x3136, 0);
-  d.SetB(0x313C, 0);
-  d.SetB(0x313D, 0);
-  d.SetB(0x313E, 0);
-  d.SetW(0x3144, ~0u);
+  d.SetW(0x3208, 2);
+  d.SetW(0x3150, 0x2A23B9);
+  d.SetH(0x314C, 0);
+  d.SetH(0x314E, 0);
+  d.SetB(0x3154, 0);
+  d.SetB(0x3155, 0);
+  d.SetB(0x3156, 0);
+  d.SetW(0x315C, ~0u);
   // Three zero bytes; N&B leaves the fourth from its stack.
+  d.SetW(0x3160, 0);
+  d.SetW(0x3158, 0x00FF0000);
+  d.SetW(0x3130, 1);
+  d.SetW(0x3134, 0);
   d.SetW(0x3148, 0);
-  d.SetW(0x3140, 0x00FF0000);
-  d.SetW(0x3118, 1);
-  d.SetW(0x311C, 0);
-  d.SetW(0x3130, 0);
   // The default vertex declaration is the device's own, at +0x2FA0.
-  d.SetW(0x2FB8, d.va + 0x3100);
+  d.SetW(0x2FD0, d.va + 0x3118);
   d.Dirty(2, 0x80000);
-  d.SetW(0x36A0, present_interval);
-  const u32 flags2 = d.W(0x5F38);
-  d.SetW(0x5F38, (behavior_flags2 & 1) ? (flags2 | 1) : (flags2 & ~1u));
+  d.SetW(0x36B0, present_interval);
+  const u32 flags2 = d.W(0x5F48);
+  d.SetW(0x5F48, (behavior_flags2 & 1) ? (flags2 | 1) : (flags2 & ~1u));
   d.SetW(native::off::PredicationSet, 0);
   native::UpdateTilePredicated(d);
   d.SetW(native::off::Predication, ~0u);
@@ -255,7 +255,7 @@ void SetScalerParameters(native::Device d, const be_u32 *scaler) {
     copy[i] = scaler[i];
   copy[6] = copy[10] = scaler[6] ? 3 : 0;
   for (u32 i = 0; i < 14; ++i)
-    d.SetW(0x3720 + i * 4, copy[i]);
+    d.SetW(0x3730 + i * 4, copy[i]);
   d.SetB(native::off::Flags2, d.B(native::off::Flags2) | 0x10);
 }
 
@@ -288,10 +288,10 @@ bool InitializePresentationParameters(native::Device d, u32 parameters_va) {
 
   rex::system::X_VIDEO_MODE mode{};
   rex::kernel::xboxkrnl::VdQueryVideoMode(&mode);
-  d.SetW(0x55B0, u32(mode.display_width));
-  d.SetW(0x55B8, u32(mode.display_width));
-  d.SetW(0x55BC, u32(i64(float(mode.refresh_rate) + 0.5f)));
-  d.SetW(0x55B4, u32(mode.display_height));
+  d.SetW(0x55C0, u32(mode.display_width));
+  d.SetW(0x55C8, u32(mode.display_width));
+  d.SetW(0x55CC, u32(i64(float(mode.refresh_rate) + 0.5f)));
+  d.SetW(0x55C4, u32(mode.display_height));
 
   if (!p[15]) {  // DisableAutoFrontBuffer
     // peggle1-nx (2026-10-21): Peggle 1 asks for the automatic front buffer (N&B does not), and its Present resolves
@@ -321,9 +321,9 @@ bool InitializePresentationParameters(native::Device d, u32 parameters_va) {
     native::SetDepthStencilSurface(d, surface);
   }
   for (u32 i = 0; i < 0x7C / 4; ++i)
-    d.SetW(0x366C + i * 4, p[i]);
+    d.SetW(0x367C + i * 4, p[i]);
   if ((front_format & 0x3FFC0000u) != 0x24900000u)
-    d.SetW(0x36AC, (front_format & 0x3F) | 0x28280100u);
+    d.SetW(0x36BC, (front_format & 0x3F) | 0x28280100u);
   SetScalerParameters(d, p + 0x60 / 4);
   // The default gamma: linear, as a piecewise-linear ramp for the front
   // buffer formats 7 and 0x36 (0x32 counts as 6).
@@ -350,7 +350,7 @@ bool InitializePresentationParameters(native::Device d, u32 parameters_va) {
     }
     SetGammaRamp(d, ramp);
   }
-  d.SetW(0x42CC, ~0u);
+  d.SetW(0x42DC, ~0u);
   return true;
 }
 
@@ -363,7 +363,7 @@ bool InitializeTitleDevice(native::Device d, u32 present_parameters) {
   // bejeweled3-nx: as N&B (+16712): Bejeweled 3's sub_82311390 (called by InitializeHardwareDevice sub_823119B0)
   // does `li r11,0; stw r11,17104(r31)` before VdInitializeEngines. (Peggle 2's sub_82629228 does the same at +17120,
   // so the word exists in XDK 21256 too.)
-  d.SetW(17104, 0);
+  d.SetW(17120, 0);
 
   // D3D reads the device through the kernel's VdGlobalDevice from any thread
   // (resource locks, blockers).
@@ -455,8 +455,8 @@ u32 Direct3D_CreateDevice_hook(u32 /*adapter*/, u32 device_type, u32 /*unused*/,
     if (!(behavior_flags & 0x100) && !(behavior_flags & 0x3F000000))
       behavior_flags |= 0xC000000;
     WriteU32(bytes, d3d::kDeviceOffsetBehaviorFlags, behavior_flags);
-    WriteU32(bytes, 21952, 0xFFFFFFFFu);
-    WriteU32(bytes, 21956, 0xFFFFFFFFu);
+    WriteU32(bytes, 21968, 0xFFFFFFFFu);
+    WriteU32(bytes, 21972, 0xFFFFFFFFu);
   } else {
     for (u32 offset : kDeviceOffsetsMinusOne)
       WriteU32(bytes, offset, 0xFFFFFFFFu);
@@ -698,14 +698,14 @@ void ConfigureForOnePassZPass(native::Device d, bool flag, u32 tile_count, u32 w
   for (u32 i = 0; i < tile_count; ++i) {
     const u32 x = d.W(native::off::TileOrigins + i * 8);
     const u32 y = d.W(native::off::TileOrigins + i * 8 + 4);
-    d.SetW(0x3498 + i * 4, (y / tile_height) * tiles_per_row + x / tile_width);
+    d.SetW(0x34B0 + i * 4, (y / tile_height) * tiles_per_row + x / tile_width);
   }
-  d.SetW(0x34D4, pitch);
+  d.SetW(0x34EC, pitch);
   d.SetW(native::off::SurfaceInfo, native::Insert(d.W(native::off::SurfaceInfo), pitch, 18, 14));
   d.Dirty(2, 0x100);
-  d.SetW(0x34D8, ((unit + width - 1) / unit) * unit);
+  d.SetW(0x34F0, ((unit + width - 1) / unit) * unit);
   u64 predicated = d.Q(native::off::PredicatedPending2);
-  if ((d.B(native::off::Flags3) & 0x20) || (d.W(0x2FE4) & 0xE0000) != 0x40000)
+  if ((d.B(native::off::Flags3) & 0x20) || (d.W(0x2FFC) & 0xE0000) != 0x40000)
     predicated |= 0x100;
   else
     predicated &= ~u64(0x100);
@@ -736,11 +736,11 @@ u32 D3DDevice_BeginCommandBuffer_hook(u32 device_va, u32 command_buffer, u32 fla
   bw(kBufferFlags) = u32(bw(kBufferFlags)) & ~0x70u;
   for (u32 offset : {0x7Cu, 0x80u, 0x84u, 0x70u, 0x90u, 0x74u, 0x78u})
     bw(offset) = 0u;
-  d.SetW(0x3BD4, 8);
+  d.SetW(0x3BE4, 8);
   d.SetB(native::off::Flags1, d.B(native::off::Flags1) & 0xDF);
-  d.SetW(0x3BC8, 0);
-  d.SetW(0x3BC4, bw(kBufferAllocatorSize));
-  for (u32 offset = 0x3654; offset <= 0x3668; offset += 4)
+  d.SetW(0x3BD8, 0);
+  d.SetW(0x3BD4, bw(kBufferAllocatorSize));
+  for (u32 offset = 0x3664; offset <= 0x3678; offset += 4)
     d.SetW(offset, 0);
   native::RewindRing(d);
 
@@ -798,8 +798,8 @@ u32 D3DDevice_BeginCommandBuffer_hook(u32 device_va, u32 command_buffer, u32 fla
     }
     d.SetW(native::off::TilingExtent, extent_x);
     d.SetW(native::off::TilingExtent + 4, extent_y);
-    d.SetW(0x34E4, 0);
-    d.SetW(0x3310, 2);
+    d.SetW(0x34FC, 0);
+    d.SetW(0x3328, 2);
     if (flags & 0x40) {
       ConfigureForOnePassZPass(d, (flags >> 7) & 1, tile_count, extent_x);
       bw(kBufferFlags) = u32(bw(kBufferFlags)) | 0x20000;
@@ -807,10 +807,10 @@ u32 D3DDevice_BeginCommandBuffer_hook(u32 device_va, u32 command_buffer, u32 fla
   }
   if (flags & 4) {
     d.SetB(native::off::Flags, d.B(native::off::Flags) | 0x40);
-    d.SetW(0x3300, native::Extract(d.W(native::off::DepthControl), 4, 3));
+    d.SetW(0x3318, native::Extract(d.W(native::off::DepthControl), 4, 3));
     if (d.B(native::off::Flags3) & 0x20) {
       u64 predicated = d.Q(native::off::PredicatedPending2) | (u64(1) << 37);
-      if (d.W(0x34D8) != (d.W(native::off::SurfaceInfo) & 0x3FFF))
+      if (d.W(0x34F0) != (d.W(native::off::SurfaceInfo) & 0x3FFF))
         predicated |= u64(1) << 57;
       d.SetQ(native::off::PredicatedPending2, predicated);
     }
@@ -1049,10 +1049,10 @@ void D3DDevice_GetDisplayMode_hook(u32 device_va, u32 /*swap_chain*/, mapped_u32
   const native::Device d = native::DeviceAt(device_va);
   if (!d || !mode)
     return;
-  mode[0] = d.W(0x366C);
-  mode[1] = d.W(0x3670);
-  mode[2] = d.W(0x55BC);
-  mode[3] = d.W(0x3674);
+  mode[0] = d.W(0x367C);
+  mode[1] = d.W(0x3680);
+  mode[2] = d.W(0x55CC);
+  mode[3] = d.W(0x3684);
 }
 
 // void D3DDevice_BlockOnFence(DWORD Fence) [0x8228F3B0]: on the device D3D
@@ -1156,22 +1156,22 @@ std::array<u16, 1024> GammaTable(bool inverse) {
 
 // The device's gamma (+0x3A9C, red, green, blue: 256 words each) for the
 // display to pick up; the renderer presents without it.
-constexpr u32 kDeviceOffsetGammaRamp = 0x3C20;
+constexpr u32 kDeviceOffsetGammaRamp = 0x3C30;
 
 void StoreGamma(native::Device d, const be_u16 (&corrected)[768]) {
   if (std::memcmp(corrected, d.bytes + kDeviceOffsetGammaRamp, sizeof(corrected)) == 0)
     return;
   if (KeGetCurrentProcessType() != 2) {
     // The display's pending copy takes the previous ramp first.
-    const u32 pending = d.W(0x5F1C);
-    if (pending && !(d.W(0x5F20) & 0x80000000u)) {
+    const u32 pending = d.W(0x5F2C);
+    if (pending && !(d.W(0x5F30) & 0x80000000u)) {
       if (auto *dest = GuestPtr<u8>(pending))
         std::memcpy(dest, d.bytes + kDeviceOffsetGammaRamp, sizeof(corrected));
     }
-    d.SetW(0x5F20, d.W(0x5F20) | 0x80000000u);
+    d.SetW(0x5F30, d.W(0x5F30) | 0x80000000u);
   }
   std::memcpy(d.bytes + kDeviceOffsetGammaRamp, corrected, sizeof(corrected));
-  d.SetW(0x42CC, d.W(0x42CC) | 2);
+  d.SetW(0x42DC, d.W(0x42DC) | 2);
 }
 
 // D3DDevice_SetGammaRamp's work: the ramp (D3DGAMMARAMP, 3 x 256 words)
@@ -1292,10 +1292,10 @@ void SetFence(u32 device_va) {
   if (bytes[kDeviceOffsetFlags2] & kDeviceFlagImmediateFences) {
     Device d = DeviceAt(device_va);
     const u32 fence = d.W(off::FenceTag);
-    if (!d.W(0x55A4)) {
+    if (!d.W(0x55B4)) {
       if (auto *completion = GuestPtr<be_u32>(d.W(off::FenceCompletion))) {
         completion[0] = fence;
-        completion[1] = (d.W(0x3BCC) & 3) | d.W(off::Ring);
+        completion[1] = (d.W(0x3BDC) & 3) | d.W(off::Ring);
       }
     }
     d.SetW(off::FenceTag, fence + 2);

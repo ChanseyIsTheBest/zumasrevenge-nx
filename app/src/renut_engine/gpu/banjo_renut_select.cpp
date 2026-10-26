@@ -11,7 +11,7 @@
 #include "renut_engine/gpu/banjo_renut_deko3d.h"   // peggle2-nx: MissingGameShaders
 #endif
 
-REXCVAR_DEFINE_STRING(zumasrevenge_renderer, "native", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_renderer, "native", "ZumasRevenge",
                       "Renderer, chosen at boot. native = the native PM4-ring renderer (the reference). renut = Renut's "
                       "Direct3D-level renderer (reNut by masterspike52, as banjo-nx carries it): the game's Direct3D runs "
                       "natively through plume (Vulkan; deko3d on the Switch with renut_gpu_backend = deko3d), with no PM4 "

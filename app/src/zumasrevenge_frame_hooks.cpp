@@ -45,7 +45,7 @@
 // So a frame that took one vblank gets one update, a frame that took two gets two (as on the Xbox 360), and the
 // game's speed is the same at 60, at 30 and at anything between; below 30 it slows down as the Xbox 360 game does.
 // 2026-10-20 (the user): 60 by default in every build (the deko3d renderer leaves the room); 30 was the default before.
-REXCVAR_DEFINE_INT32(zumasrevenge_fps, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_fps, 0, "ZumasRevenge",
                      "Frames a second the game presents: 60 (every vblank, one logic update per 1/60 s that passed: "
                      "the default) or 30 (the Xbox 360 game: a frame every second vblank, two logic updates per "
                      "frame). The game speed is the same either way");
@@ -56,12 +56,10 @@ namespace {
 // (out/renut_port/device_offsets.md: SynchronizeToPresentationInterval, sub_822F59F0, reads it there; the layout is
 // Peggle 2's 21256 with two shifts, -24 from 11584 and -16 from 13600, so Peggle 2's +14000 is +13984 here). Peggle 1's
 // XDK 7776 had it at +13596, as N&B's 7645.
-// feedingfrenzy-nx (2026-10-26): not found yet in XDK 2571's device: 0 = not used (no 60 fps forcing).
-// zuma-nx (2026-10-26): +13772 in XDK 2135's device (D3DDevice_SetRenderState_PresentInterval sub_8212C8F0 is
-// `stw r4,13772(r3); blr`, paired by the state alignment with Feeding Frenzy's 820BB0B0). As in feedingfrenzy2-nx, 60 fps
-// forcing stays off (kForce60) until the game's frame step is known to run by elapsed time; the word is read for the
-// log line of the interval the game asks for.
-constexpr uint32_t kDeviceIntervalOffset = 13772;
+// zumasrevenge-nx (2026-10-27): +14000 in XDK 20871's device, which is Peggle 2's layout (tools/renut_device_offsets_zr.py:
+// Bejeweled 3's +13984 + 16); Renut's device keeps it there too (d3d_native_state.cpp kPresentInterval 0x36B0). 60 fps
+// forcing stays off (kForce60) until the interval the game asks for is known.
+constexpr uint32_t kDeviceIntervalOffset = 14000;
 constexpr bool kForce60 = false;
 
 bool Fps60() {
@@ -107,11 +105,11 @@ extern "C" int zumasrevenge_fps_updates(void) {
   return updates;
 }
 
-REXCVAR_DEFINE_INT32(zumasrevenge_diag_swap_stack, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_diag_swap_stack, 0, "ZumasRevenge",
                      "PC diagnostic: log the host call stack (the game's call chain) of this swap; 0 = off");
 
 #if ZUMASREVENGE_RENUT_RENDERER
-REXCVAR_DEFINE_BOOL(zumasrevenge_renut_swap_pacing, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_renut_swap_pacing, true, "ZumasRevenge",
                     "Renut's renderer: the Swap waits for the presentation interval the game set (60 Hz vblanks), as "
                     "the console's does; false = frames as fast as they come (timing tests)");
 
@@ -184,21 +182,12 @@ void PaceRenutSwap(uint32_t interval) {
 }  // namespace
 #endif
 
-// feedingfrenzy-nx (2026-10-26): the frame is Feeding Frenzy's D3DDevice_Present (sub_820B17B0, once a frame), which
-// calls D3DDevice_Swap (sub_820B1260, the only caller of VdSwap).
-// zuma-nx (2026-10-26): Zuma's D3DDevice_Present is sub_821221C0 (called by the game's sub_820E19F8 and sub_820E2FC8):
-// it copies the device's resolve rectangles (+12808, +12832), resolves, then calls D3DDevice_Swap sub_82121BE0 (the
-// only caller of VdSwap; its other caller sub_82139C38 is not called). Renut's renderer replaces Present (its Swap is
-// native, so the guest's never runs): this hook shares the address with it (BANJO_RENUT_HOOK_SHARED, draw.cpp).
-extern "C" REX_FUNC(__imp__sub_821221C0);
-REX_HOOK_RAW(sub_821221C0) {  // D3DDevice_Present
-  // zuma-nx (2026-10-26): with Renut's renderer the game's SetRenderState_PresentInterval is Renut's, which keeps the
-  // interval in its own device layout (d3d_native_state.cpp kPresentInterval, 0x36A0), not at XDK 2135's +13772.
-  uint32_t interval_offset = kDeviceIntervalOffset;
-#if ZUMASREVENGE_RENUT_RENDERER
-  constexpr uint32_t kRenutDeviceIntervalOffset = 0x36A0;
-  if (::banjo::renut_gpu::Active()) interval_offset = kRenutDeviceIntervalOffset;
-#endif
+// zumasrevenge-nx (2026-10-27): the frame is D3DDevice_Swap, as in Bejeweled 3: sub_82309410, the only caller of VdSwap
+// (three callers). Renut's renderer replaces it (BANJO_RENUT_HOOK_SHARED in hooks/device.cpp): this hook shares the
+// address. Renut's device keeps the presentation interval where XDK 20871's does (+14000 / 0x36B0).
+extern "C" REX_FUNC(__imp__sub_82309410);
+REX_HOOK_RAW(sub_82309410) {  // D3DDevice_Swap
+  const uint32_t interval_offset = kDeviceIntervalOffset;
   // Which presentation interval the game asks for (1 = every vblank, 2 = every second one), when it changes.
   if (interval_offset) {
     static uint32_t last_interval = ~0u;
@@ -226,7 +215,7 @@ REX_HOOK_RAW(sub_821221C0) {  // D3DDevice_Present
   if (::banjo::renut_gpu::Active()) {
     uint8_t interval_bytes[4];
     std::memcpy(interval_bytes, base + ctx.r3.u32 + interval_offset, 4);
-    renut_native_sub_821221C0(ctx, base);  // Renut's Present (resolves and presents)
+    renut_native_sub_82309410(ctx, base);  // Renut's Swap (presents)
     // Renut's Swap does not reach the kernel's VdSwap, which advances the SDK's frame clock (clock_per_swap_hz, the
     // deterministic runs that compare Renut with the emulated GPU frame for frame; a no-op otherwise).
     rex::chrono::Clock::NotifyGuestSwap();
@@ -236,7 +225,7 @@ REX_HOOK_RAW(sub_821221C0) {  // D3DDevice_Present
     return;
   }
 #endif
-  __imp__sub_821221C0(ctx, base);
+  __imp__sub_82309410(ctx, base);
   g_zumasrevenge_game_frames.fetch_add(1, std::memory_order_relaxed);
 #if ZUMASREVENGE_NATIVE_RENDERER
   // The native ring thread waits in a WAIT_REG_MEM for the game's frame pacing word most of each frame

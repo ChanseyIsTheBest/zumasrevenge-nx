@@ -1,13 +1,12 @@
-# ReXGlue recompilation manifest for Zuma (Xbox Live Arcade, title 584107EF, default.xex with Title Update #2).
+# ReXGlue recompilation manifest for Zuma's Revenge! (Xbox Live Arcade, title 584111E9, default.xex).
 #
-# Run tools/codegen.ps1 (Windows): it calls `rexglue codegen zumasrevenge_manifest.toml` and the post-codegen steps. The
-# project name sets the prefix of everything generated: generated/default/zumasrevenge_{init,pch,funcs}.h,
+# Run tools/codegen.ps1 (Windows): it calls `rexglue codegen zumasrevenge_manifest.toml` and the post-codegen steps.
+# The project name sets the prefix of everything generated: generated/default/zumasrevenge_{init,pch,funcs}.h,
 # zumasrevenge_recomp.N.cpp, and the CMake target zumasrevenge_recomp built by CMakeLists.txt.
 #
-# default.xex (tools/xex_info.py, 2026-10-26): image base 0x82000000, image size 0x004D0000, XDK 2.0.2135, version
-# 0.0.1.1. It imports only xam.xex and xboxkrnl.exe; the game has no other code module. Title Update #2
-# (default.xexp next to it in assets/game_root) makes it 0.0.3.1: the generator and the game apply it themselves, and
-# every address in this project is the patched image's (entry point 0x820CE650).
+# default.xex (tools/xex_info.py, 2026-10-27): original PE name "Zuma2 Xbox 360.exe", base 0x82000000, entry point
+# 0x82304238, XDK 2.0.20871. It imports only xam.xex and xboxkrnl.exe; the game has no other code module. The user's
+# package has no title update or DLC.
 
 [project]
 name = "zumasrevenge"

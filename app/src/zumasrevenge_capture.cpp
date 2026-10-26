@@ -24,22 +24,22 @@
 #include <rex/logging.h>
 #include <rex/ui/presenter.h>
 
-REXCVAR_DEFINE_INT32(zumasrevenge_video_s, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_video_s, 0, "ZumasRevenge",
                      "Record a short video of the game image this many seconds after start, to captures/ next to "
                      "the executable (0 = off; works minimized). tools/make_video.sh makes the MP4")
     .range(0, 3600);
-REXCVAR_DEFINE_INT32(zumasrevenge_video_frames, 300, "Zuma", "Frames in the video (zumasrevenge_video_s); the game presents 30 fps")
+REXCVAR_DEFINE_INT32(zumasrevenge_video_frames, 300, "ZumasRevenge", "Frames in the video (zumasrevenge_video_s); the game presents 30 fps")
     .range(1, 36000);
-REXCVAR_DEFINE_INT32(zumasrevenge_video_from_frame, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_video_from_frame, 0, "ZumasRevenge",
                      "Record the video from this game frame on (D3DDevice_Swap count) instead of zumasrevenge_video_s: two "
                      "runs with the same input script then record the same game frames (0 = off)")
     .range(0, 10000000);
-REXCVAR_DEFINE_BOOL(zumasrevenge_video_half, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_video_half, true, "ZumasRevenge",
                     "Record the video at half resolution (~55 MB of disk per second instead of ~220 MB)");
 
 std::atomic<uint64_t> g_zumasrevenge_game_frames{0};
 
-REXCVAR_DEFINE_INT32(zumasrevenge_shots_every_s, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_shots_every_s, 0, "ZumasRevenge",
                      "Test: one frame every N seconds into shots/ next to the executable (raw RGBA; 0 = off)")
     .range(0, 3600);
 

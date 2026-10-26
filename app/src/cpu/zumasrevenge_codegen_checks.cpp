@@ -33,7 +33,7 @@
 
 #include <cstring>
 
-REXCVAR_DEFINE_STRING(zumasrevenge_diag_indirect_census, "", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_diag_indirect_census, "", "ZumasRevenge",
                       "Diagnostic (PC): a file that gets, with every '[hot] 10 s' report, the census of the game's "
                       "indirect calls (per call site: calls and targets). tools/indirect_promotions.py makes "
                       "app/indirect_promotions.txt from it. Empty = no census")
@@ -43,7 +43,7 @@ REXCVAR_DEFINE_STRING(zumasrevenge_diag_indirect_census, "", "Zuma",
 // the Switch): how often the guest switches the host's float flush mode (an `msr fpcr` on the A57) and reaches the
 // runtime's lock-and-syscall paths, per second, with each "[hot] 10 s" report. It tells what is worth making cheaper
 // on the console, which a PC profile cannot show.
-REXCVAR_DEFINE_BOOL(zumasrevenge_diag_runtime_census, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_diag_runtime_census, false, "ZumasRevenge",
                     "Diagnostic (PC): flush-mode switches and calls of the host runtime's clock, critical section, "
                     "event, semaphore, wait and handle-lookup paths per second, in [census] log lines with each "
                     "[hot] 10 s report")

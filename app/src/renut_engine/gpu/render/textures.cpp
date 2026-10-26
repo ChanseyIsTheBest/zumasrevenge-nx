@@ -36,27 +36,27 @@ namespace zumasrevenge::render {
 uint32_t WantedScaleQuarters();  // src/me/zumasrevenge_render_mode.cpp: the render height / 180 for the console's mode
 }
 
-REXCVAR_DEFINE_INT32(zumasrevenge_renut_texture_backoff, 32, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_renut_texture_backoff, 32, "ZumasRevenge",
                      "Renut's renderer: a linear texture whose content check found it unchanged is checked again after "
                      "2, 4 ... this many frames (as Peggle 2's native renderer does); the game's loader and Direct3D "
                      "unlocks still have it read at its next use. 1 = every frame (Renut's own behaviour)")
     .range(1, 256);
 
-REXCVAR_DEFINE_INT32(zumasrevenge_renut_texture_cap_mb, 512, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_renut_texture_cap_mb, 512, "ZumasRevenge",
                      "Renut's renderer where the GPU reports no memory budget (deko3d): above this many MB of host "
                      "textures, the ones not bound for 120 frames are released (made again from guest memory when "
                      "used); 0 = never");
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_renut_hd_async, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_renut_hd_async, true, "ZumasRevenge",
                     "Renut's renderer: the HD atlases are read from zumasrevenge_hd.pack on a worker thread (the game's own "
                     "art shows for the few frames until an atlas is read); false = read on the render thread at once "
                     "(no switch from the 720 art, but a level's first frames wait for every atlas)");
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_renut_diag_texture_checks, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_renut_diag_texture_checks, false, "ZumasRevenge",
                     "Diagnostic: every 300 frames, the linear textures whose content was checked most (bytes, "
                     "mode, changes found)");
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_renut_diag_transitions, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_renut_diag_transitions, false, "ZumasRevenge",
                     "Diagnostic: every 300 frames, the layout changes of textures, render targets and depth images "
                     "that recorded a barrier, by kind and from -> to layout");
 

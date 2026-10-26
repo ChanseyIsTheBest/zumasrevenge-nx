@@ -19,16 +19,16 @@
 
 #include "../zumasrevenge_enhancements.h"
 
-REXCVAR_DEFINE_INT32(zumasrevenge_hd_atlases, 1, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_hd_atlases, 1, "ZumasRevenge",
                      "HD atlases from zumasrevenge_hd.pack (the PS4 release's 1080 art in the game's atlas layout): 0 = "
                      "never; 1 = when the render height is above 720 (docked, by default); 2 = always, handheld too "
                      "(the larger atlases are then filtered down to the 720p picture). Without the pack file nothing "
                      "changes")
     .range(0, 2)
     .lifecycle(rex::cvar::Lifecycle::kHotReload);
-REXCVAR_DEFINE_STRING(zumasrevenge_hd_pack, "", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_hd_pack, "", "ZumasRevenge",
                       "Path of the HD atlas pack (empty = zumasrevenge_hd.pack next to the program)");
-REXCVAR_DEFINE_BOOL(zumasrevenge_hd_verify, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_hd_verify, false, "ZumasRevenge",
                     "Check every HD image read from the pack against its stored hash (a damaged file or SD card)");
 
 // Non-CPU group: it changes the picture on purpose (sharper sprites), so it is a key like every other change.

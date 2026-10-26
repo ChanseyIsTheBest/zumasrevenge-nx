@@ -25,7 +25,7 @@
 #include <rex/runtime.h>
 #include <rex/system/function_dispatcher.h>
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_diag_textures, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_diag_textures, false, "ZumasRevenge",
                     "Diagnostic: log a CRC-32 of every stream the game inflates and of every texture of 1 MB or more "
                     "the renderer uploads, and write the first large textures to texdiag/ next to the executable "
                     "(tools/texdiag_check.py compares them with the archive)");
@@ -175,7 +175,7 @@ LONG CALLBACK TrapHandler(EXCEPTION_POINTERS* info) {
 }
 #endif
 
-REXCVAR_DEFINE_INT32(zumasrevenge_diag_plane_trap_ms, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_diag_plane_trap_ms, 0, "ZumasRevenge",
                      "Diagnostic (PC, with zumasrevenge_diag_textures): this many milliseconds after a video starts, the Y "
                      "plane of its first set is made read-only, so the next write to it faults and the log names the "
                      "host code that writes it (the run ends there). 0 = off");

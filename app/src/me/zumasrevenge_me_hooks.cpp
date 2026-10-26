@@ -78,7 +78,7 @@
 #include "renut_engine/gpu/banjo_shared_hooks.h"
 #endif
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_dump_shaders, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_dump_shaders, false, "ZumasRevenge",
                     "Write every shader container the game creates to shaders/ next to the executable "
                     "(vs_<hash>.bin / ps_<hash>.bin), for tools/build_shader_library.sh");
 

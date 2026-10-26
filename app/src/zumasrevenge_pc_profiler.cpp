@@ -16,11 +16,11 @@
 
 #include <rex/cvar.h>
 
-REXCVAR_DEFINE_INT32(zumasrevenge_pc_profile_s, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_pc_profile_s, 0, "ZumasRevenge",
                      "PC: sample every thread and append its hottest functions to logs/pc_profile.log every N "
                      "seconds; 0 = off")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_INT32(zumasrevenge_pc_profile_hz, 1000, "Zuma", "PC: samples per second of zumasrevenge_pc_profile_s")
+REXCVAR_DEFINE_INT32(zumasrevenge_pc_profile_hz, 1000, "ZumasRevenge", "PC: samples per second of zumasrevenge_pc_profile_s")
     .range(10, 4000)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
 

@@ -26,32 +26,32 @@ constexpr u32 kPendingFetch = 3;    // fetch constants, tessellation, points
 constexpr u32 kPendingMisc = 4;     // m_MiscPacket and friends
 
 // Render state storage in the CDevice-private area.
-constexpr u32 kBlendState = 0x2FE0;       // D3D blend: src 0-4, op 5-7, dest 8-12, alpha at 16+
-constexpr u32 kBlendFlags = 0x2FE4;       // 31 blend enable, 30 separate alpha, HiZ fields
-constexpr u32 kScissorTestEnable = 0x2FE8;
-constexpr u32 kColorWriteEnable = 0x2FEC;  // [4]
-constexpr u32 kZEnable = 0x2FFC;
-constexpr u32 kStencilEnable = 0x3000;
-constexpr u32 kPointSpriteEnable = 0x3004;
-constexpr u32 kPointSize = 0x300C;
-constexpr u32 kPointSizeMin = 0x3010;
-constexpr u32 kPointSizeMax = 0x3014;
-constexpr u32 kHighPrecisionBlend = 0x3060;  // [4]
-constexpr u32 kPresentInterval = 0x36A0;
-constexpr u32 kBehaviorFlags2 = 0x5F38;
+constexpr u32 kBlendState = 0x2FF8;       // D3D blend: src 0-4, op 5-7, dest 8-12, alpha at 16+
+constexpr u32 kBlendFlags = 0x2FFC;       // 31 blend enable, 30 separate alpha, HiZ fields
+constexpr u32 kScissorTestEnable = 0x3000;
+constexpr u32 kColorWriteEnable = 0x3004;  // [4]
+constexpr u32 kZEnable = 0x3014;
+constexpr u32 kStencilEnable = 0x3018;
+constexpr u32 kPointSpriteEnable = 0x301C;
+constexpr u32 kPointSize = 0x3024;
+constexpr u32 kPointSizeMin = 0x3028;
+constexpr u32 kPointSizeMax = 0x302C;
+constexpr u32 kHighPrecisionBlend = 0x3078;  // [4]
+constexpr u32 kPresentInterval = 0x36B0;
+constexpr u32 kBehaviorFlags2 = 0x5F48;
 // Sampler state storage, a byte per sampler.
 constexpr u32 kMaxAnisotropy = 0x2A70;
-constexpr u32 kMaxMipLevel = 0x302C;
-constexpr u32 kMinMipLevel = 0x3046;
+constexpr u32 kMaxMipLevel = 0x3044;
+constexpr u32 kMinMipLevel = 0x305E;
 constexpr u32 kZFilter = 0x2A8A;  // bit 0 mag, 1 min, 2 separate Z filtering
 // Viewport (SetViewport's arguments, clamped) and the register image values.
-constexpr u32 kViewport = 0x32C8;  // x, y, width, height, min z, max z, 0
+constexpr u32 kViewport = 0x32E0;  // x, y, width, height, min z, max z, 0
 constexpr u32 kVportXScale = 0x2908;
 constexpr u32 kVportZScale = 0x2918;
-constexpr u32 kStreamDeclStrides = 0x2FD0;  // u8[16]
-constexpr u32 kVertexDeclaration = 0x2FB8;
-constexpr u32 kVertexShader = 0x32F8;
-constexpr u32 kPixelShader = 0x32F4;
+constexpr u32 kStreamDeclStrides = 0x2FE8;  // u8[16]
+constexpr u32 kVertexDeclaration = 0x2FD0;
+constexpr u32 kVertexShader = 0x3310;
+constexpr u32 kPixelShader = 0x330C;
 constexpr u32 kGprAllocation = 0x2B28;
 constexpr u32 kScreenExtentQueryMode = 0x2B24;
 
@@ -1037,7 +1037,7 @@ bool TilingBoundSurfaces(Device device) {
 void UpdateTilePredicated(Device device) {
   const u8 flags = device.B(off::Flags);
   const bool predicated = !device.W(off::PredicationSet) && !(flags & 0x08) && !(flags & 0x04) &&
-                          !device.B(0x30FB) && TilingBoundSurfaces(device);
+                          !device.B(0x3113) && TilingBoundSurfaces(device);
   device.SetB(off::Flags, u8((flags & 0xFE) | (predicated ? 1 : 0)));
 }
 
@@ -1208,7 +1208,7 @@ void SetDepthStencilSurface(Device device, u32 surface) {
     device.SetW(off::HiControl, hi_control);
     device.SetB(off::Flags2, u8(Insert(device.B(off::Flags2), hi_control, 5, 1)));
     if ((device.B(off::Flags3) & 0x20) && TilingBoundSurfaces(device))
-      device.SetW(off::SurfaceInfo, Insert(device.W(off::SurfaceInfo), device.W(0x34D4), 18, 14));
+      device.SetW(off::SurfaceInfo, Insert(device.W(off::SurfaceInfo), device.W(0x34EC), 18, 14));
     device.Dirty(kPendingStates, Bit(55) | 0x100 | 0x20000);
   } else {
     device.SetW(off::HiControl, device.W(off::HiControl) & ~0xFu);
@@ -1614,9 +1614,9 @@ void Resolve(Device device, u32 flags, u32 dest_texture, float clear_z, u32 clea
 namespace {
 
 constexpr u32 kExportAddress = 0x2898;       // [Index]: the stream's GPU address
-constexpr u32 kExportCount = 0x3640;         // BeginExports not yet ended
-constexpr u32 kExportNanVertexDone = 0x3644;
-constexpr u32 kExportFlags = 0x3648;
+constexpr u32 kExportCount = 0x3650;         // BeginExports not yet ended
+constexpr u32 kExportNanVertexDone = 0x3654;
+constexpr u32 kExportFlags = 0x3658;
 // N&B's switches for the two GPU workarounds below (dword_82FAD204/208).
 // bejeweled3-nx: DoBeginExportNanVertex sub_822F92C8 reads [0x82B103B0] (`lis r11,-32079; lwz r11,944(r11)`) where
 // Peggle 2's sub_82616D78 reads 0x82D75090; DoEndExport512Pixels sub_822F9420 reads [0x82B103B4] (Peggle 2 0x82D75094).

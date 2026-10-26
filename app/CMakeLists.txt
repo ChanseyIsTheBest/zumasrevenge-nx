@@ -605,7 +605,7 @@ if(REXGLUE_PLATFORM_SWITCH)
         set(_zumasrevenge_icon ICON "${CMAKE_CURRENT_SOURCE_DIR}/../out/icon_dev.jpg")
     endif()
     rexglue_switch_add_nro(zumasrevenge
-        NAME "Zuma"
+        NAME "Zuma's Revenge!"
         AUTHOR "ChanseyIsTheBest"
         VERSION "${ZUMASREVENGE_VERSION}"
         ${_zumasrevenge_icon})

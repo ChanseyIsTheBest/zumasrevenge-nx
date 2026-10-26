@@ -372,7 +372,7 @@ void D3DDevice_BeginTiling_hook(u32 device, u32 /*flags*/, u32 count, u32 rects_
   }
   d.SetW(native::off::TilingExtent, extent_x);
   d.SetW(native::off::TilingExtent + 4, extent_y);
-  d.SetW(0x34E4, 0);
+  d.SetW(0x34FC, 0);
 
   if (!(d.B(native::off::Flags3) & 0x20)) {
     // The largest tile, from its origin: its clear covers a tile of EDRAM.
@@ -385,7 +385,7 @@ void D3DDevice_BeginTiling_hook(u32 device, u32 /*flags*/, u32 count, u32 rects_
     // after the clear.
     float viewport[6];
     for (u32 i = 0; i < 6; ++i)
-      viewport[i] = d.F(0x32C8 + i * 4);
+      viewport[i] = d.F(0x32E0 + i * 4);
     i32 scissor[4];
     for (u32 i = 0; i < 4; ++i)
       scissor[i] = i32(d.W(native::off::ScissorRect + i * 4));
@@ -401,17 +401,17 @@ void D3DDevice_BeginTiling_hook(u32 device, u32 /*flags*/, u32 count, u32 rects_
     native::SetScissorRect(d, scissor[0], scissor[1], scissor[2], scissor[3]);
   }
   if (const auto *color = color_va ? GuestPtr<const u8>(color_va) : nullptr)
-    std::memcpy(d.bytes + 0x34F0, color, 16);
+    std::memcpy(d.bytes + 0x3508, color, 16);
   else
-    std::memset(d.bytes + 0x34F0, 0, 16);
+    std::memset(d.bytes + 0x3508, 0, 16);
   d.SetF(0x3500, 0.0f);  // flt_82000D18
   d.SetW(0x3504, 0);
 
   const u32 target = d.W(native::off::RenderTargets);
-  d.SetW(0x3314, target ? target : d.W(native::off::DepthStencil));
+  d.SetW(0x332C, target ? target : d.W(native::off::DepthStencil));
   for (u32 i = 0; i < 5; ++i)  // the 4 targets, then depth
     d.SetW(native::off::TilingSurfaces + i * 4, d.W(native::off::RenderTargets + i * 4));
-  d.SetW(0x3310, 2);
+  d.SetW(0x3328, 2);
   d.SetB(native::off::Flags, d.B(native::off::Flags) | 0x20);
   d.SetW(native::off::PredicationSet, 0);
   native::UpdateTilePredicated(d);
@@ -447,7 +447,7 @@ u32 D3DDevice_EndTiling_hook(u32 device, u32 /*resolve_flags*/, u32 /*rects_va*/
       const u32 tile = native::off::TileRects + i * 16;
       ClearRect rect{i32(d.W(tile)), i32(d.W(tile + 4)), i32(d.W(tile + 8)), i32(d.W(tile + 12))};
       // A tile at the surface's edge resolves to a multiple of 8.
-      const u32 surface = d.W(0x3314);
+      const u32 surface = d.W(0x332C);
       const auto *s = surface ? GuestPtr<const be_u32>(surface) : nullptr;
       const u32 size = s ? u32(s[9]) : 0;
       if (u32(rect.x2) == (size >> 18) + 1)
@@ -459,7 +459,7 @@ u32 D3DDevice_EndTiling_hook(u32 device, u32 /*resolve_flags*/, u32 /*rects_va*/
                              (d.B(native::off::Flags3) & 0x20) ? 0 : 2);
       const i32 dest_x = i32(d.W(tile)), dest_y = i32(d.W(tile + 4));
       if (i + 1 < count) {
-        Resolve(device, 0x300, &rect, dest_texture, dest_x, dest_y, 0, 0, device + 0x34F0,
+        Resolve(device, 0x300, &rect, dest_texture, dest_x, dest_y, 0, 0, device + 0x3508,
                 d.F(0x3500), d.W(0x3504), 0);
       } else {
         Resolve(device, 0x300, &rect, dest_texture, dest_x, dest_y, 0, 0, color_va,
@@ -478,7 +478,7 @@ u32 D3DDevice_EndTiling_hook(u32 device, u32 /*resolve_flags*/, u32 /*rects_va*/
 
   d.SetB(native::off::Flags3, d.B(native::off::Flags3) & 0xCF);
   d.SetB(native::off::Flags, d.B(native::off::Flags) & 0xDF);
-  d.SetW(0x3314, 0);
+  d.SetW(0x332C, 0);
   d.SetW(native::off::PredicationSet, 0);
   native::UpdateTilePredicated(d);
   d.SetW(native::off::RunPredicationState, 0);
@@ -533,7 +533,7 @@ void D3DDevice_Present_hook(u32 device) {
   FlushDeferredVertices(device);
   float viewport[6];
   for (u32 i = 0; i < 6; ++i)
-    viewport[i] = d.F(0x32C8 + i * 4);
+    viewport[i] = d.F(0x32E0 + i * 4);
   i32 scissor[4];
   for (u32 i = 0; i < 4; ++i)
     scissor[i] = i32(d.W(native::off::ScissorRect + i * 4));
@@ -549,7 +549,7 @@ void D3DDevice_Present_hook(u32 device) {
   native::SetViewport(d, viewport[0], viewport[1], viewport[2], viewport[3], viewport[4],
                       viewport[5]);
   native::SetScissorRect(d, scissor[0], scissor[1], scissor[2], scissor[3]);
-  native::Swap(device, front_buffer, device + 0x36CC);
+  native::Swap(device, front_buffer, device + 0x36DC);
 }
 
 // void D3DDevice_SetVertexShader(D3DDevice*, D3DVertexShader*) [0x8222A0A8]

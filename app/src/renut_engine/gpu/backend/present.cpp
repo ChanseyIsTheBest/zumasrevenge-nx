@@ -47,11 +47,11 @@ REXCVAR_DEFINE_STRING(banjo_renut_diag_show_texture, "", "Banjo/Renut",
 REXCVAR_DEFINE_DOUBLE(banjo_renut_diag_show_gamma, 1.0, "Banjo/Renut",
                       "Diagnostic: banjo_renut_diag_show_texture's exponent (depth near 1 shows with 64 or so)");
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_renut_display_ramp, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_renut_display_ramp, true, "ZumasRevenge",
                     "Renut's renderer: apply the display gamma ramp the game sets (as the console's scan-out and the "
                     "native renderer do), as the power curve closest to it; false = the frame as drawn");
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_renut_display_ramp_table, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_renut_display_ramp_table, true, "ZumasRevenge",
                     "Renut's renderer: a table ramp (not piecewise linear) is applied as the table itself, exactly as "
                     "the console's scan-out; false = the closest power curve");
 

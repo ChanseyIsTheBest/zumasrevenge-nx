@@ -4,3 +4,4 @@
 # sites are the copies'). Hand-written natives (sub_822DFF80 among the hottest) keep their hooks.
 # feedingfrenzy-nx (2026-10-26): empty until a profile of Feeding Frenzy (Bejeweled 3's entries removed).
 # zuma-nx (2026-10-26): empty until a profile of Zuma.
+# zumasrevenge-nx (2026-10-27): empty until a profile of Zuma's Revenge.

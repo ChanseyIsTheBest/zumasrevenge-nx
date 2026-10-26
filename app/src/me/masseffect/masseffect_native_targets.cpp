@@ -92,7 +92,7 @@ REXCVAR_DEFINE_BOOL(banjo_native_park_resolved, true, "Nuts&Bolts/Graphics",
 #else
 #define ZUMASREVENGE_EDRAM4_PAIR_REPORT_DEFAULT true
 #endif
-REXCVAR_DEFINE_BOOL(zumasrevenge_native_edram4_pair_report, ZUMASREVENGE_EDRAM4_PAIR_REPORT_DEFAULT, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_native_edram4_pair_report, ZUMASREVENGE_EDRAM4_PAIR_REPORT_DEFAULT, "ZumasRevenge",
                     "EDRAM mode 4 report: transfers broken down by view pair and by draw (string keys per transfer "
                     "run; off by default on the Switch, where it costs ring-thread time)")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
@@ -145,7 +145,7 @@ ZUMASREVENGE_RING_GPU_ENHANCEMENT(g_partial_inside, zumasrevenge_native_partial_
                 "allocated a few pages above a freed one of the same size gets its own texture instead of being "
                 "written into the old one");
 // Test of zumasrevenge_native_partial_resolve_inside: leaves the stale texture that triggers it.
-REXCVAR_DEFINE_STRING(zumasrevenge_diag_stale_resolved, "", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_diag_stale_resolved, "", "ZumasRevenge",
                       "Diagnostic: 'BASE:PAGES[:HEIGHT]' (BASE in hex, as in the log's 'resolved texture at' "
                       "line). Before the first color resolve to guest address BASE, a resolved texture of the same "
                       "width and format (and HEIGHT, default the same) is created PAGES 4 KB pages below it, as an "
@@ -154,11 +154,11 @@ ZUMASREVENGE_RING_ENHANCEMENT(g_edram_memo, zumasrevenge_cpu_ring_edram_memo, tr
                 "Ring thread: a draw with the same render-target state as the previous draw reuses its EDRAM preparation "
                 "(only when the full path would do no work: same images, tiles owned in the same epoch, nothing pending; "
                 "self-checked against the full path)");
-REXCVAR_DEFINE_BOOL(zumasrevenge_native_zcull_1x_depth, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_native_zcull_1x_depth, false, "ZumasRevenge",
                     "Native renderer: 1x depth views keep their ZCULL plane (no TRANSFER_DST for copy-engine stencil "
                     "imports, which then use masked stencil passes). Off until measured on the console")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(zumasrevenge_native_edram4_clear_color0, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_native_edram4_clear_color0, true, "ZumasRevenge",
                     "EDRAM mode 4: a depth + color 0 clear drawn through a 4x alias (Direct3D's Clear) is cleared in "
                     "the 1x owners of both instead of drawn and transferred 4x -> 1x (same bytes; false = as before)");
 REXCVAR_DEFINE_BOOL(banjo_native_edram4_skip_unsupported, true, "Nuts&Bolts/Graphics",
@@ -175,14 +175,14 @@ REXCVAR_DEFINE_INT32(masseffect_native_edram_alias_mode, 4, "Mass Effect",
                      "4 experimental shared depth/color ownership (not a complete bit-exact emulation)")
     .range(0, 4);
 
-REXCVAR_DEFINE_INT32(zumasrevenge_diag_resolves_from, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_diag_resolves_from, 0, "ZumasRevenge",
                      "Diagnostic: logs the raw registers of resolves number N to N+79 (0 = off)");
 // Diagnostic of zumasrevenge_gpu_resolve_alias: every resolve and alias event of 40 presented frames from this one (0 = off).
-REXCVAR_DEFINE_INT32(zumasrevenge_diag_alias_frames, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_diag_alias_frames, 0, "ZumasRevenge",
                      "Diagnostic: logs every resolve and every zumasrevenge_gpu_resolve_alias event of the 40 presented frames "
                      "from this one (0 = off)");
 // Test of zumasrevenge_gpu_resolve_alias's copy on read: SA2 never reads its aliases, so this makes the Swap read one.
-REXCVAR_DEFINE_BOOL(zumasrevenge_diag_present_alias, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_diag_present_alias, false, "ZumasRevenge",
                     "Diagnostic: the Swap paints an alias of the front buffer (zumasrevenge_gpu_resolve_alias: SA2's 1F6F8000, "
                     "the same bytes) instead of the front buffer, so the alias is copied on every Swap. The image must "
                     "not change");

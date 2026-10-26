@@ -20,26 +20,26 @@
 #include <switch.h>
 #endif
 
-REXCVAR_DEFINE_INT32(zumasrevenge_render_height_handheld, 720, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_render_height_handheld, 720, "ZumasRevenge",
                      "Render height in handheld mode (the PC's starting mode unless zumasrevenge_render_docked): 720 = the "
                      "game's own 1280x720. Any multiple of 180 from 360 to 2160 (others are rounded to the nearest); "
                      "the width follows at 16:9")
     .range(180, 4320)
     .lifecycle(rex::cvar::Lifecycle::kHotReload);
-REXCVAR_DEFINE_INT32(zumasrevenge_render_height_docked, 1080, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_render_height_docked, 1080, "ZumasRevenge",
                      "Render height in docked mode (the TV): 1080 = 1920x1080, 720 = the game's own 1280x720. Any "
                      "multiple of 180 from 360 to 2160; switching between docked and handheld changes it at the next "
                      "frame")
     .range(180, 4320)
     .lifecycle(rex::cvar::Lifecycle::kHotReload);
-REXCVAR_DEFINE_BOOL(zumasrevenge_render_docked, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_render_docked, false, "ZumasRevenge",
                     "PC only: start in the simulated docked mode (zumasrevenge_render_height_docked). The "
                     "bind_zumasrevenge_docked key (F9) switches between docked and handheld while the game runs, like "
                     "docking the Switch. The Switch itself always follows the console");
-REXCVAR_DEFINE_INT32(zumasrevenge_render_test_toggle_at, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_render_test_toggle_at, 0, "ZumasRevenge",
                      "Test (PC): toggle the simulated docked mode after this presented swap (0 = never)")
     .range(0, 2000000000);
-REXCVAR_DEFINE_INT32(zumasrevenge_render_test_toggle_every, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_render_test_toggle_every, 0, "ZumasRevenge",
                      "Test (PC): after zumasrevenge_render_test_toggle_at, toggle again every this many presented swaps "
                      "(0 = once)")
     .range(0, 2000000000);

@@ -22,12 +22,12 @@
 
 #include "zumasrevenge_capture.h"
 
-REXCVAR_DEFINE_INT32(zumasrevenge_d3d_trace, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_d3d_trace, 0, "ZumasRevenge",
                      "PC test aid: log the Direct3D API calls up to and during this game frame (0 = off)");
 
 namespace {
 
-constexpr uint32_t kCreateDevice = 0x82121838;
+constexpr uint32_t kCreateDevice = 0;  // zumasrevenge-nx: comes with the mapping
 uint32_t g_device_slot = 0;  // Direct3D_CreateDevice's r8
 struct Stat {
   uint32_t addr = 0;
@@ -67,19 +67,19 @@ void Trace(uint32_t addr, PPCContext& ctx, uint8_t* base) {
   }
   // The shader containers (CreatePixelShader 82125AC8, CreateVertexShader 82125BB8) and the vertex elements
   // (CreateVertexDeclaration 82124AB8): their first 96 bytes, on the first three calls.
-  if (s->calls < 3 && (addr == 0x82125AC8u || addr == 0x82125BB8u || addr == 0x82124AB8u) && ctx.r3.u32) {
+  if (s->calls < 3 && (addr == 0u || addr == 0u || addr == 0u) && ctx.r3.u32) {
     std::string hex;
     for (uint32_t o = 0; o < 96; o += 4) hex += fmt::format(" {:08X}", Load32(base, ctx.r3.u32 + o));
     REXLOG_INFO("[d3dtrace] {:08X} r3 {:08X}:{}", addr, ctx.r3.u32, hex);
   }
   // Every shader container created (virtual part + physical part) to out/ff_shaders/<ps|vs>_<n>.bin, for the
   // container-version study (XDK 2571 writes version 0x0E; Renut and XenosRecomp read 0x11).
-  if ((addr == 0x82125AC8u || addr == 0x82125BB8u) && ctx.r3.u32) {
+  if ((addr == 0u || addr == 0u) && ctx.r3.u32) {
     const uint32_t c = ctx.r3.u32;
     const uint32_t size = Load32(base, c + 4) + Load32(base, c + 8);
     if (size > 0 && size < 0x40000) {
       static int n = 0;
-      const std::string path = fmt::format("out/ff_shaders/{}_{:02}.bin", addr == 0x82125AC8u ? "ps" : "vs", n++);
+      const std::string path = fmt::format("out/ff_shaders/{}_{:02}.bin", addr == 0u ? "ps" : "vs", n++);
       std::filesystem::create_directories("out/ff_shaders");
       if (FILE* f = std::fopen(path.c_str(), "wb")) {
         std::fwrite(base + c, 1, size, f);
@@ -112,84 +112,4 @@ void Trace(uint32_t addr, PPCContext& ctx, uint8_t* base) {
 
 #define FF_D3D_TRACE(ADDR)                            extern "C" REX_FUNC(__imp__sub_##ADDR);            REX_HOOK_RAW(sub_##ADDR) {                            Trace(0x##ADDR##u, ctx, base);                     __imp__sub_##ADDR(ctx, base);                    }
 
-FF_D3D_TRACE(82121170)
-FF_D3D_TRACE(82121308)
-FF_D3D_TRACE(82121390)
-FF_D3D_TRACE(821213F8)
-FF_D3D_TRACE(821217E0)
-FF_D3D_TRACE(82121838)
-FF_D3D_TRACE(82122300)
-FF_D3D_TRACE(82122368)
-FF_D3D_TRACE(82122880)
-FF_D3D_TRACE(82122900)
-FF_D3D_TRACE(82122968)
-FF_D3D_TRACE(82122A18)
-FF_D3D_TRACE(82122A88)
-FF_D3D_TRACE(82123F08)
-FF_D3D_TRACE(82124140)
-FF_D3D_TRACE(82124288)
-FF_D3D_TRACE(821243D0)
-FF_D3D_TRACE(82124428)
-FF_D3D_TRACE(82124480)
-FF_D3D_TRACE(821244D0)
-FF_D3D_TRACE(82124690)
-FF_D3D_TRACE(821246E0)
-FF_D3D_TRACE(82124A50)
-FF_D3D_TRACE(82124AB8)
-FF_D3D_TRACE(82124C68)
-FF_D3D_TRACE(82124C70)
-FF_D3D_TRACE(82124D70)
-FF_D3D_TRACE(82125AC8)
-FF_D3D_TRACE(82125BB8)
-FF_D3D_TRACE(82125C90)
-FF_D3D_TRACE(82125D10)
-FF_D3D_TRACE(82125D18)
-FF_D3D_TRACE(82125D20)
-FF_D3D_TRACE(82125D48)
-FF_D3D_TRACE(82125D50)
-FF_D3D_TRACE(82125D58)
-FF_D3D_TRACE(82126308)
-FF_D3D_TRACE(821263E0)
-FF_D3D_TRACE(82126450)
-FF_D3D_TRACE(82126ED0)
-FF_D3D_TRACE(82126ED8)
-FF_D3D_TRACE(82127830)
-FF_D3D_TRACE(82127838)
-FF_D3D_TRACE(82127840)
-FF_D3D_TRACE(82127848)
-FF_D3D_TRACE(82127890)
-FF_D3D_TRACE(82127AF8)
-FF_D3D_TRACE(82127B00)
-FF_D3D_TRACE(82127B08)
-FF_D3D_TRACE(82127B10)
-FF_D3D_TRACE(82127C90)
-FF_D3D_TRACE(82127C98)
-FF_D3D_TRACE(82127CA0)
-FF_D3D_TRACE(821287F8)
-FF_D3D_TRACE(821288A8)
-FF_D3D_TRACE(82128940)
-FF_D3D_TRACE(82128958)
-FF_D3D_TRACE(821289E0)
-FF_D3D_TRACE(82128A78)
-FF_D3D_TRACE(82128B88)
-FF_D3D_TRACE(821291D0)
-FF_D3D_TRACE(8212A1C0)
-FF_D3D_TRACE(8212A1D0)
-FF_D3D_TRACE(8212A1D8)
-FF_D3D_TRACE(8212A280)
-FF_D3D_TRACE(8212A298)
-FF_D3D_TRACE(8212A340)
-FF_D3D_TRACE(8212A348)
-FF_D3D_TRACE(8212A3F0)
-FF_D3D_TRACE(8212A818)
-FF_D3D_TRACE(8212A870)
-FF_D3D_TRACE(8212A898)
-FF_D3D_TRACE(8212A8E0)
-FF_D3D_TRACE(8212A900)
-FF_D3D_TRACE(8212AA88)
-FF_D3D_TRACE(8212D4D0)
-FF_D3D_TRACE(821339B8)
-FF_D3D_TRACE(82136DB8)
-FF_D3D_TRACE(8213AE00)
-FF_D3D_TRACE(8213AEB0)
-FF_D3D_TRACE(8213AF98)
+// zumasrevenge-nx (2026-10-27): Zuma's list removed; Zuma's Revenge's comes with the mapping of Renut's hooks.

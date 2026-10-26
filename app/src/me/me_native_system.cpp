@@ -85,7 +85,7 @@ REXCVAR_DEFINE_BOOL(masseffect_vblank_sleep_exact, true, "Mass Effect",
                     "Native renderer: the vblank thread sleeps until the exact next vblank instead of 1 ms steps")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
 // From sa2-nx (with the SDK's diag_vdswap_delay_us): a slow frame on a fast PC, to measure zumasrevenge_vsync_relaxed.
-REXCVAR_DEFINE_INT32(zumasrevenge_diag_ring_swap_delay_us, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_diag_ring_swap_delay_us, 0, "ZumasRevenge",
                      "Test only: the ring thread spins this long at each swap (a slower GPU frame on a fast PC: the 30 -> "
                      "20 fall of fixed vsync, and zumasrevenge_vsync_relaxed, can be measured without the console)")
     .range(0, 1000000);
@@ -93,13 +93,13 @@ REXCVAR_DEFINE_INT32(zumasrevenge_diag_ring_swap_delay_us, 0, "Zuma",
 REXCVAR_DEFINE_INT32(banjo_renderdoc_capture_s, 0, "Nuts&Bolts/Graphics",
                      "Diagnostic: this many seconds after the renderer starts, ask RenderDoc (when its layer is loaded) "
                      "to capture one frame into capturas/rdc next to the exe (0 = off)");
-REXCVAR_DEFINE_INT32(zumasrevenge_api_discover_draws, 0, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_api_discover_draws, 0, "ZumasRevenge",
                      "API-level renderer, phase 1 (diagnostic): save this many draws' Direct3D device struct (as the "
                      "game called the draw) beside the register file the ring rebuilt for them, to logs/"
                      "api_discover.bin for tools/d3d_shadow_discover.py. 0 = off")
     .range(0, 100000)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_INT32(zumasrevenge_api_discover_every, 16, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_api_discover_every, 16, "ZumasRevenge",
                      "API-level renderer discovery: sample one draw in N (spreads the samples over more scenes)")
     .range(1, 1 << 20)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
@@ -281,7 +281,7 @@ ZUMASREVENGE_RING_GPU_ENHANCEMENT(g_lock_rechecks, zumasrevenge_gpu_lock_recheck
                 "The renderer reads a texture again at its next use when the game's loader has written it (or "
                 "Direct3D announced a write lock of its memory); off = it waits for its recheck interval, so an "
                 "atlas loaded into the previous level's memory shows the old image for up to 39 frames");
-REXCVAR_DEFINE_BOOL(zumasrevenge_diag_ring_events, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_diag_ring_events, false, "ZumasRevenge",
                     "Diagnostic: log the first write locks the game announces (zumasrevenge_gpu_lock_rechecks) and a "
                     "stretch of the ring thread's timeline (event writes, waits, swaps)");
 // 2026-10-13 (console: green and black bars and spots in every video; none in verify mode).
@@ -338,7 +338,7 @@ ZUMASREVENGE_RING_ENHANCEMENT(g_rect_list_in_place, zumasrevenge_cpu_ring_rect_l
 ZUMASREVENGE_RING_ENHANCEMENT(g_main_priority, zumasrevenge_cpu_main_thread_priority, false,
                 "Main thread: the thread that draws runs one priority step above the other game threads (no 10 ms "
                 "time-slice waits behind them)");
-REXCVAR_DEFINE_INT32(zumasrevenge_main_thread_priority, 0x3A, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_main_thread_priority, 0x3A, "ZumasRevenge",
                      "Horizon priority for zumasrevenge_cpu_main_thread_priority (0x1C-0x3B; the game threads run at 0x3B)")
     .range(0x1C, 0x3B)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
@@ -363,7 +363,7 @@ ZUMASREVENGE_RING_ENHANCEMENT(g_direct_refs, zumasrevenge_cpu_direct_state_refs,
                 "place (the packets the marker overwrites are still copied)");
 // Round 6: the draw's pairing record (the bound shader objects, NoteDrawCall) travels inside its direct-state record
 // instead of through the record queue and the ring's address table.
-REXCVAR_DEFINE_BOOL(zumasrevenge_direct_state_census, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_direct_state_census, false, "ZumasRevenge",
                     "Diagnostic: which register groups each direct-state record writes (the 10 most common combinations "
                     "every 10 s), to size what a draw that changes only constants could skip");
 // sa2-nx, the direct renderer step 2 (2026-10-07): Direct3D's state flush writes the draw's record itself.

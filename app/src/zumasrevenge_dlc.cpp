@@ -23,7 +23,7 @@
 #include <rex/system/xam/content_device.h>
 #include <rex/system/xam/content_manager.h>
 
-REXCVAR_DEFINE_STRING(zumasrevenge_dlc_dir, "", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_dlc_dir, "", "ZumasRevenge",
                       "Folder with Xbox 360 DLC packages to install at startup (empty = dlc/ next to the executable)");
 
 namespace zumasrevenge::dlc {

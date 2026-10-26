@@ -26,12 +26,12 @@
 // on the stutter its checks of the Wwise mixing copies caused: "it's a release build do we really need self-checks?".
 // The natives are proven with zumasrevenge_cpu_verify (every call checked) and the PC's runs; a play build only keeps the
 // one check of each counter's first call (c == 0 below), which is free. Set the two keys to check more.
-REXCVAR_DEFINE_INT32(zumasrevenge_hot_guard_calls, 0, "Zuma natives",
+REXCVAR_DEFINE_INT32(zumasrevenge_hot_guard_calls, 0, "ZumasRevenge natives",
                      "Native replacements: the first N calls of each thread are checked against the recompiled original "
                      "(0 = none; zumasrevenge_cpu_verify checks every call)")
     .range(0, 1000000000)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_INT32(zumasrevenge_hot_guard_period, 0, "Zuma natives",
+REXCVAR_DEFINE_INT32(zumasrevenge_hot_guard_period, 0, "ZumasRevenge natives",
                      "Native replacements: after the first N calls every P-th call is checked (rounded to a power of "
                      "two; 0 = none)")
     .range(0, 1 << 24)
@@ -40,7 +40,7 @@ REXCVAR_DEFINE_INT32(zumasrevenge_hot_guard_period, 0, "Zuma natives",
 // cost a counter update and a branch on every one of millions of hooked calls a second, and the guarded hooks' check of
 // each thread's first call is a self-check (play builds have none). Off: every hook calls its native directly
 // (zumasrevenge::hot::g_fast_dispatch). On for an analysis that needs the call counts (tools/profile_per_call.py).
-REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_hook_counters, false, "Zuma natives",
+REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_hook_counters, false, "ZumasRevenge natives",
                     "Count the natives' calls for the 10 s [hot] report (and check each thread's first call); off: the "
                     "hooks call their natives directly")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
@@ -375,24 +375,24 @@ void Check(Hook& h, PPCContext& ctx, uint8_t* base) {
 // non-volatile registers, as assembly routines leave their scratch registers undefined), then the localized copies
 // (tools/localize_native.py --list app/src/cpu/hot/localized.txt writes their hook lines).
 
-// C runtime (zuma-nx, 2026-10-26; tools/crt_signatures.py scan and a byte comparison with Feeding Frenzy's image):
-//   memset at 0x82112990 is byte for byte Peggle 2's 0x825F10B0 (160 bytes, FNV-1a 64 0x54D201DC8A21DABA);
-//   memcpy at 0x82113040 is byte for byte Feeding Frenzy's sub_822CD480 (1056 bytes, 0xA7EAD6E565BDE9F2: XDK 2571's
-//   version with n_825F0AE0's contract, feedingfrenzy-nx's check);
-//   memmove at 0x821147D0 is Feeding Frenzy's sub_822CEDF0 (the same 48 instructions; its tail call now reaches memcpy
-//   sub_82113040), so n_822CEDF0.h applies under this routine's own hash;
-//   _stricmp at 0x82114C00 is byte for byte Feeding Frenzy's sub_822CFFE0 (88 bytes, the same hash).
-// Feeding Frenzy's strstr native has no match in this executable (not even with the branches masked).
-ZUMASREVENGE_HOT_HOOK(82113040, zumasrevenge_cpu_native_memcpy, "Native CRT memcpy (sub_82113040): host memcpy/memmove",
-                 zumasrevenge::hot::n_825F0AE0, &zumasrevenge::hot::n_825F0AE0::Writes, zumasrevenge::hot::Cmp::kReturn, 1056,
-                 0xA7EAD6E565BDE9F2ull)
-ZUMASREVENGE_HOT_HOOK(82114C00, zumasrevenge_cpu_native_stricmp, "Native CRT _stricmp (sub_82114C00)",
+// C runtime (zumasrevenge-nx, 2026-10-27; tools/crt_signatures.py scan and a byte comparison with the earlier ports'
+// images):
+//   memcpy at 0x825EA270 and memset at 0x825ECFB0 are byte for byte Peggle 2's 0x825F0AE0 / 0x825F10B0 (1160 and 160
+//   bytes, FNV-1a 64 0xEE0EAEB1E0584297 / 0x54D201DC8A21DABA, as in Bejeweled 3 and Feeding Frenzy 2), so their
+//   natives apply here;
+//   memmove at 0x825EA7A0 is Feeding Frenzy's sub_822CEDF0 (the same 48 instructions; its tail call now reaches memcpy
+//   sub_825EA270), so n_822CEDF0.h applies under this routine's own hash;
+//   _stricmp at 0x825EC8F0 is byte for byte Feeding Frenzy's sub_822CFFE0 (88 bytes, the same hash).
+ZUMASREVENGE_HOT_HOOK(825EA270, zumasrevenge_cpu_native_memcpy, "Native CRT memcpy (sub_825EA270): host memcpy/memmove",
+                 zumasrevenge::hot::n_825F0AE0, &zumasrevenge::hot::n_825F0AE0::Writes, zumasrevenge::hot::Cmp::kReturn, 1160,
+                 0xEE0EAEB1E0584297ull)
+ZUMASREVENGE_HOT_HOOK(825EC8F0, zumasrevenge_cpu_native_stricmp, "Native CRT _stricmp (sub_825EC8F0)",
                  zumasrevenge::hot::n_822CFFE0, &zumasrevenge::hot::n_822CFFE0::Writes, zumasrevenge::hot::Cmp::kReturn, 88,
                  0x214392DE394E0692ull)
-ZUMASREVENGE_HOT_HOOK(821147D0, zumasrevenge_cpu_native_memmove, "Native CRT memmove (sub_821147D0): host memmove",
+ZUMASREVENGE_HOT_HOOK(825EA7A0, zumasrevenge_cpu_native_memmove, "Native CRT memmove (sub_825EA7A0): host memmove",
                  zumasrevenge::hot::n_822CEDF0, &zumasrevenge::hot::n_822CEDF0::Writes, zumasrevenge::hot::Cmp::kReturn, 192,
-                 0xB05B1A780BDD6783ull)
-ZUMASREVENGE_HOT_HOOK(82112990, zumasrevenge_cpu_native_memset, "Native CRT memset (sub_82112990): host memset",
+                 0xBD29672E6F4F4BA9ull)
+ZUMASREVENGE_HOT_HOOK(825ECFB0, zumasrevenge_cpu_native_memset, "Native CRT memset (sub_825ECFB0): host memset",
                  zumasrevenge::hot::n_825F10B0, &zumasrevenge::hot::n_825F10B0::Writes, zumasrevenge::hot::Cmp::kReturn, 160,
                  0x54D201DC8A21DABAull)
 

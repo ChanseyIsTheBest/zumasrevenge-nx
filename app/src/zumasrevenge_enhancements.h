@@ -81,7 +81,7 @@ void StopReport();
 }  // namespace zumasrevenge::enhancements
 
 #define ZUMASREVENGE_NATIVE(VAR, KEY, DESC)                                                     \
-  REXCVAR_DEFINE_BOOL(KEY, true, "Zuma natives", DESC);                                 \
+  REXCVAR_DEFINE_BOOL(KEY, true, "ZumasRevenge natives", DESC);                                 \
   ::zumasrevenge::enhancements::Native VAR{#KEY, DESC, [] { return REXCVAR_GET(KEY); }};       \
   [[maybe_unused]] static const bool VAR##_registered_ = ::zumasrevenge::enhancements::RegisterNative(&VAR)
 

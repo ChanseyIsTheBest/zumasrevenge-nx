@@ -38,7 +38,7 @@
 #endif
 
 // The game's language (the user's request, 2026-10-13): see OnPostInitLogging.
-REXCVAR_DEFINE_STRING(zumasrevenge_language, "", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_language, "", "ZumasRevenge",
                       "The game's language: en, ja, de, fr, es, it or pt; empty = the system's language (English when "
                       "the game does not have it)");
 REXCVAR_DECLARE(uint32_t, user_language);  // the SDK's (xam_user.cpp)
@@ -53,7 +53,7 @@ REXCVAR_DEFINE_STRING(zumasrevenge_shader_misses,
 #else
                       "",
 #endif
-                      "Zuma",
+                      "ZumasRevenge",
                       "Folder for shaders the native renderer cannot identify (empty = off; relative = next to the "
                       "executable). Send its contents to extend zumasrevenge_shaders.mesp");
 

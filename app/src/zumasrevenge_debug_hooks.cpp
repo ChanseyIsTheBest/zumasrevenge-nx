@@ -15,25 +15,22 @@
 // tools/compare_raw.py) from showing the same board. MTRand::SRand(this r3, seed r4) is sub_825286E0 (a seed of 0
 // becomes 4357, then the Mersenne Twister's 1812433253 (0x6C078965) recurrence over 624 words; 11 call sites in 9
 // functions). With zumasrevenge_test_seed != 0 every MTRand is seeded with it instead: the same boards in every run.
-REXCVAR_DEFINE_UINT32(zumasrevenge_test_seed, 0, "Zuma",
+REXCVAR_DEFINE_UINT32(zumasrevenge_test_seed, 0, "ZumasRevenge",
                       "Test runs: every random generator of the game seeded with this value (0 = the game's own seeds)");
 
-// feedingfrenzy-nx (2026-10-26): Feeding Frenzy's random numbers are the CRT's: srand sub_822CCCE0 stores its seed in the
-// thread's data (_getptd sub_822CEB30, +20) and rand sub_822CCD10 steps it (`lis 3; ori 0x43FD`: 214013, then
-// + 2531011, bits 16-30).
-// zuma-nx (2026-10-26): the same CRT code in Zuma (branches masked): srand sub_82112918, rand sub_82112948, _getptd
-// sub_82114568. With zumasrevenge_test_seed != 0 every srand gets that seed instead: the same fish in every
-// run (the deterministic PC runs that compare the natives with the generated code, docs/zumasrevenge-notes.md).
-extern "C" REX_FUNC(__imp__sub_82112918);
-REX_HOOK_RAW(sub_82112918) {  // srand
+// zumasrevenge-nx (2026-10-27): Zuma's Revenge is PopCap's framework, as Bejeweled 3: MTRand::SRand(this r3, seed r4) is
+// sub_82543B68 (a seed of 0 becomes 4357, then the Mersenne Twister's 1812433253 (0x6C078965) recurrence; 6 call sites
+// in 5 functions). With zumasrevenge_test_seed != 0 every MTRand is seeded with it instead (Bejeweled 3's hook).
+extern "C" REX_FUNC(__imp__sub_82543B68);
+REX_HOOK_RAW(sub_82543B68) {  // MTRand::SRand
   if (const uint32_t seed = REXCVAR_GET(zumasrevenge_test_seed)) {
     static bool logged = false;
     if (!logged) {
       logged = true;
-      REXLOG_INFO("[test] srand seeds replaced by zumasrevenge_test_seed = {} (the game's first was {})", seed,
-                  ctx.r3.u32);
+      REXLOG_INFO("[test] MTRand seeds replaced by zumasrevenge_test_seed = {} (the game's first was {})", seed,
+                  ctx.r4.u32);
     }
-    ctx.r3.u64 = seed;
+    ctx.r4.u64 = seed;
   }
-  __imp__sub_82112918(ctx, base);
+  __imp__sub_82543B68(ctx, base);
 }

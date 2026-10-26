@@ -69,7 +69,7 @@
 #include <rex/thread.h>
 #include <rex/ui/vulkan/util.h>
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_render_half_pixel_guest, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_render_half_pixel_guest, false, "ZumasRevenge",
                     "Render scale above 720p: move Direct3D's half pixel by half a GUEST pixel (sa2-nx's rule) instead "
                     "of half a host pixel. Comparison only: it leaves a dark row at the top of the 1080p picture");
 REXCVAR_DEFINE_STRING(banjo_native_skip_vs, "", "Nuts&Bolts/Graphics",
@@ -86,14 +86,14 @@ REXCVAR_DEFINE_INT32(masseffect_native_diag_msaa2_phase, 2, "Mass Effect",
                     "Diagnostic collapsed-2x raster phase: 0 unchanged, 1 SDK native-2x sample0, "
                     "2 measured ME viewport jitter cancellation. Clipped XY-transformed draws only, "
                     "remaps supported material FragCoord XY inversely. NOT complete MSAA or a default correction.").range(0, 2);
-REXCVAR_DEFINE_BOOL(zumasrevenge_native_constants_dedupe, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_native_constants_dedupe, true, "ZumasRevenge",
                     "Native renderer: a new shader constant generation with the same bytes as the block uploaded "
                     "last reuses it (no new upload, no new constant-buffer offset; false = as before)")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(zumasrevenge_diag_shared_words, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_diag_shared_words, false, "ZumasRevenge",
                     "Diagnostic: which words of the per-draw shared constant block differ from the block uploaded "
                     "before (every 10 s, the \"C6 shared words\" line)");
-REXCVAR_DEFINE_BOOL(zumasrevenge_native_pass_narrow_end, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_native_pass_narrow_end, true, "ZumasRevenge",
                     "Native renderer: a render pass's end dependency names its real consumers (shader, transfer and "
                     "attachment access) instead of MEMORY_READ|WRITE (false = as before)");
 REXCVAR_DEFINE_BOOL(masseffect_native_gpu_labels, false, "Mass Effect",

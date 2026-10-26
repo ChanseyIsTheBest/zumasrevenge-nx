@@ -19,13 +19,13 @@
 
 #include "zumasrevenge_capture.h"
 
-REXCVAR_DEFINE_STRING(zumasrevenge_input_script, "", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_input_script, "", "ZumasRevenge",
                       "Scripted controller for unattended test runs: \"<frame or Ns>:<buttons or axis>[:<hold>]\", "
                       "comma-separated (see app/src/zumasrevenge_input_script.h). Empty = off");
 
 REXCVAR_DECLARE(int32_t, zumasrevenge_fps);
 
-REXCVAR_DEFINE_STRING(zumasrevenge_input_script_p2, "", "Zuma",
+REXCVAR_DEFINE_STRING(zumasrevenge_input_script_p2, "", "ZumasRevenge",
                       "Scripted controller of a second player (same syntax as zumasrevenge_input_script): a real pad for "
                       "player 2 behind an idle pad for player 1, for unattended runs of the multiplayer lobby");
 

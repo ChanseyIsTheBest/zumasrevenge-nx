@@ -33,17 +33,17 @@ void ConfigureDispatch(bool verify);  // the hooks' direct dispatch (src/cpu/zum
 #include <rex/cvar.h>
 #include <rex/logging.h>
 
-REXCVAR_DEFINE_INT32(zumasrevenge_main_core, -1, "Zuma",
+REXCVAR_DEFINE_INT32(zumasrevenge_main_core, -1, "ZumasRevenge",
                      "Switch: the core the guest main thread has to itself (0-2; -1: every guest thread on any core). "
                      "Set before the game starts: each thread takes its cores as it starts, none is moved while it runs")
     .range(-1, 2);
 
 extern "C" void RexSetGuestThreadCoresAtStart(int main_core, uint32_t others_mask, int others_preferred);
 
-REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_enhancements, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_enhancements, true, "ZumasRevenge",
                     "Master switch of the CPU enhancements: off turns every one of them off whatever its own key says "
                     "(the [enhancements] line at startup lists them)");
-REXCVAR_DEFINE_BOOL(zumasrevenge_noncpu_enhancements, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_noncpu_enhancements, true, "ZumasRevenge",
                     "Master switch of the non-CPU enhancements (rendering, loading): off turns every one of them off "
                     "whatever its own key says");
 // From futari-nx: the verify configuration (app/configs/zumasrevenge_cpu_verify.toml). The same enhancements, with every
@@ -51,7 +51,7 @@ REXCVAR_DEFINE_BOOL(zumasrevenge_noncpu_enhancements, true, "Zuma",
 // (2048) / masseffect_native_fast_copy_verify (256). Each comparison runs the original path too, so it is slower: for a
 // test session, not for play. Every 10 s the log has "[verify] checks done: ... | differences: N"; N must be 0 (a
 // difference also logs DIFFERENCE / MISMATCH and turns that one fast path off for the rest of the session).
-REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_verify, false, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_verify, false, "ZumasRevenge",
                     "Verify mode: every fast path's self-check compares with the original path on every use; "
                     "\"[verify]\" log lines count the checks and the differences (must be 0). Slower: test only");
 
@@ -62,18 +62,18 @@ REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_verify, false, "Zuma",
 //     every busy thread into logs/rex/rex_profile.log (as logs/rex/stacks_profile.flag does);
 //   masseffect_gpu_marks_categories (the renderer's, default true): a GPU timestamp at every pass-category change, the
 //     "GPU per Swap" lines with the time per category and the idle gap (the image does not change).
-REXCVAR_DEFINE_BOOL(switch_profile_stacks, true, "Zuma",
+REXCVAR_DEFINE_BOOL(switch_profile_stacks, true, "ZumasRevenge",
                     "Switch: the CPU sampler pauses busy threads 1000 times a second and logs every pc to "
                     "logs/rex/rex_profile.log (as logs/rex/stacks_profile.flag does); off only in the verify config");
 // From sa2-nx: the console profile file at all (sdk/src/ui/switch_perf.cpp reads it by name). The release build's
 // built-in settings turn it off (app/zumasrevenge_switch_defaults.toml): no logs/rex/rex_profile.log, no sampling.
-REXCVAR_DEFINE_BOOL(switch_profile_report, true, "Zuma",
+REXCVAR_DEFINE_BOOL(switch_profile_report, true, "ZumasRevenge",
                     "Switch: write the console profile every 10 s to logs/rex/rex_profile.log (false = no file, no "
                     "sampling; the FPS overlay keeps going)");
 
 // All the native replacements at once (each also has its own zumasrevenge_cpu_native_* key), for A/B runs of one batch
 // against the same build without it.
-REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_natives, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_cpu_natives, true, "ZumasRevenge",
                     "The native replacements of hot guest functions (src/cpu): false turns all of them off");
 
 // Written by tools/codegen.ps1 into app/generated/codegen_profile.txt and passed in by CMakeLists.txt.

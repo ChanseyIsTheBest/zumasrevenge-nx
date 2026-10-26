@@ -31,7 +31,7 @@ REXCVAR_DEFINE_STRING(renut_resolution, "720p", "Nuts&Bolts/Graphics",
 // peggle2-nx (2026-10-20): the render height of Peggle 2's own keys, per console mode (zumasrevenge_render_height_handheld
 // / _docked: 720 / 1080 by default; the PC's simulated mode is F9 / zumasrevenge_render_docked), as the native renderer
 // renders, instead of renut_resolution.
-REXCVAR_DEFINE_BOOL(zumasrevenge_renut_resolution_by_mode, true, "Zuma",
+REXCVAR_DEFINE_BOOL(zumasrevenge_renut_resolution_by_mode, true, "ZumasRevenge",
                     "Renut's renderer: render at zumasrevenge_render_height_handheld / _docked for the console's mode (as "
                     "the native renderer); false = renut_resolution (and 1280x720 on deko3d)");
 

@@ -18,50 +18,50 @@ REXCVAR_DECLARE(bool, zumasrevenge_noncpu_enhancements);
 // peggle1-nx (2026-10-21): the NVK keys of the native renderer (src/me/masseffect/masseffect_native_draws.cpp, not built
 // here), which Renut's tuning reads on the Switch (ControlNvkLocked). With deko3d and no Vulkan driver they do nothing;
 // the native renderer's defaults.
-REXCVAR_DEFINE_BOOL(masseffect_native_set4_differences, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(masseffect_native_set4_differences, true, "ZumasRevenge/Renut",
                     "NVK only: descriptor set 4 by differences (no driver in this build)");
-REXCVAR_DEFINE_INT32(masseffect_native_nvk_measure, 64, "Zuma/Renut",
+REXCVAR_DEFINE_INT32(masseffect_native_nvk_measure, 64, "ZumasRevenge/Renut",
                      "NVK only: measures inside NVK on 1 in N calls (no driver in this build)")
     .range(0, 4096);
-REXCVAR_DEFINE_BOOL(masseffect_native_nvk_emission, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(masseffect_native_nvk_emission, true, "ZumasRevenge/Renut",
                     "NVK only: each draw command written in one go (no driver in this build)");
-REXCVAR_DEFINE_BOOL(masseffect_native_nvk_cbufs, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(masseffect_native_nvk_cbufs, true, "ZumasRevenge/Renut",
                     "NVK only: only the cbuf slots that can get dirty looked at (no driver in this build)");
-REXCVAR_DEFINE_BOOL(masseffect_native_nvk_dynamic, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(masseffect_native_nvk_dynamic, true, "ZumasRevenge/Renut",
                     "NVK only: only the dirty dynamic state groups emitted (no driver in this build)");
-REXCVAR_DEFINE_BOOL(masseffect_native_nvk_preload, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(masseffect_native_nvk_preload, true, "ZumasRevenge/Renut",
                     "NVK only: cache hints for the pipeline and shaders (no driver in this build)");
 #endif
 
-REXCVAR_DEFINE_INT32(banjo_ring_core, 1, "Zuma/Renut",
+REXCVAR_DEFINE_INT32(banjo_ring_core, 1, "ZumasRevenge/Renut",
                      "Renut's renderer: its render thread is pinned to this core (-1 = the process's whole mask)")
     .range(-1, 3)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_INT32(banjo_background_compile_core, 2, "Zuma/Renut",
+REXCVAR_DEFINE_INT32(banjo_background_compile_core, 2, "ZumasRevenge/Renut",
                      "Renut's renderer: its pipeline prebuild workers and content verifiers run on this core")
     .range(-1, 3)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_INT32(banjo_prewarm_threads, 1, "Zuma/Renut",
+REXCVAR_DEFINE_INT32(banjo_prewarm_threads, 1, "ZumasRevenge/Renut",
                      "Renut's renderer: pipeline prebuild worker threads (at the lowest priority)")
     .range(1, 3)
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(banjo_cpu_verify, false, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(banjo_cpu_verify, false, "ZumasRevenge/Renut",
                     "Renut's renderer: its record worker and caches check themselves against the plain path (slower)")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(banjo_gpu_nvk_draw_contract, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(banjo_gpu_nvk_draw_contract, true, "ZumasRevenge/Renut",
                     "Renut's renderer on NVK: the driver's per-draw contract (nvk_switch_dibujo) when the driver has it")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(banjo_gpu_blend_skip, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(banjo_gpu_blend_skip, true, "ZumasRevenge/Renut",
                     "Renut's renderer: transparent pixels whose blend leaves the target unchanged are discarded (also "
                     "needs banjo_renut_blend_skip)")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(banjo_gpu_tess_grid, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(banjo_gpu_tess_grid, true, "ZumasRevenge/Renut",
                     "Renut's renderer: tessellated patches drawn as an indexed grid (none in Peggle 2)")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(banjo_gpu_robustness_off, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(banjo_gpu_robustness_off, true, "ZumasRevenge/Renut",
                     "Renut's renderer: pipelines without buffer and image robustness (VK_EXT_pipeline_robustness)")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
-REXCVAR_DEFINE_BOOL(banjo_gpu_bool_spec, true, "Zuma/Renut",
+REXCVAR_DEFINE_BOOL(banjo_gpu_bool_spec, true, "ZumasRevenge/Renut",
                     "Renut's renderer: the bool constants a pipeline's shaders test as specialization constants")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
 

@@ -74,8 +74,8 @@ template <uint32_t N>
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--gen', required=True)
-    ap.add_argument('--memcpy', default='82113040')  # zuma-nx: Zuma's (Feeding Frenzy's code, byte for byte)
-    ap.add_argument('--memset', default='82112990')  # zuma-nx: Zuma's (Peggle 2's 825F10B0, byte for byte)
+    ap.add_argument('--memcpy', default='825EA270')  # zumasrevenge-nx: Peggle 2's code, byte for byte
+    ap.add_argument('--memset', default='825ECFB0')  # zumasrevenge-nx: Peggle 2's 825F10B0, byte for byte
     ap.add_argument('--check', action='store_true')
     a = ap.parse_args()
     call = re.compile(r'^(\t+)((?:__imp__)?sub_(%s|%s)\(ctx, base\));$' % (a.memcpy.upper(), a.memset.upper()))
