@@ -7,7 +7,7 @@
 // Optimisation: one host memset of [dst, dst + n), instead of the byte, 16-byte and 128-byte stores; the loops'
 // register arithmetic in closed form.
 // Audit:
-//   - - memory: every path writes each byte of [dst, dst + n) and nothing else, with the byte r4 & 0xFF: the n < 16
+//   - memory: every path writes each byte of [dst, dst + n) and nothing else, with the byte r4 & 0xFF: the n < 16
 //     loop stores the low byte of extsb(r4); for n >= 16, v0 is that byte splatted (lvsl of r4 and of r4 >> 4, vslb by
 //     4, vor, vspltb 0: the copy's own three operations are kept here, so v0 is the copy's); the head is the 16 - (dst
 //     & 15) bytes to the boundary when dst is not aligned, then min(n' >> 4, the 16-byte units to the 128 boundary)
