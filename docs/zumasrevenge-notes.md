@@ -244,3 +244,14 @@ tap again you fire" (both games).
   at the lower left shot at 1.895; a still hold (0.5 s) aimed and the next tap shot there; a hold while aimed aimed
   again. Before the change (`aim3` / `aim4`, the frog turned outright but the touch still sent): the frog on the tap's
   angle within 0.003 at the shot, against misses up to 0.37 before.
+- **The screen's edges** (the user: the frog still "doesn't turn sometimes", on levels with one frog spot too, whatever
+  the tap's length, not on the HUD): the Board is the game's 864x648 in the middle (Widget mX / mY +0x2C / +0x30, 0 / 0
+  in the WidgetManager's coordinates), and the level's picture fills the screen around it. A tap there landed on the
+  ScreenTransitionWidget behind the Board (vtable `0x82048C74`, RTTI `.?AVScreenTransitionWidget@Sexy@@`, 1280x720,
+  no mouse handling), which the "screen without taps: A" rule answered with A: a shot without turning. `dense1` (a tap
+  every 30 frames over level 1-1): every tap at x 200 and 1100 did that. Now a tap on that widget with a visible Board
+  is the level's (and none is while a dialog is up: the pause menu, Help & Options ...). `dense2`: all 142 touches the
+  level's (28 beside the Board, e.g. (-8, 324) -> the frog at 4.79), none on the "no taps" rule, the lesson passed,
+  10,150 points.
+- **1.0.0 test build:** version 1.0.0, author ChanseyIsTheBest, the icon `out/icon.jpg` (the user's
+  `zumarevenge.webp`, 256x256; not committed); no LTO yet. NRO `7fe1a172...`, `check_switch_build.py` passed.

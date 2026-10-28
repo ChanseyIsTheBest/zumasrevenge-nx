@@ -77,6 +77,11 @@ constexpr uint32_t kWidgetMouseVisible = 0x51;  // Widget::mMouseVisible (mVisib
 constexpr uint32_t kButtonCalloutVtable = 0x820090DC;
 constexpr uint32_t kLoadingScreenVtable = 0x82020B3C;
 constexpr uint32_t kBoardVtable = 0x820032BC;  // Sexy::Board, a level
+constexpr uint32_t kScreenTransitionVtable = 0x82048C74;  // Sexy::ScreenTransitionWidget, the whole screen, behind a level
+constexpr uint32_t kWidgetX = 0x2C, kWidgetY = 0x30;      // Widget mX / mY (mWidth / mHeight at +0x34 / +0x38)
+// The dialogs (RTTI, out/touch/vtables2.txt): PauseDialog, HelpAndOptionsDialog, OptionsDialog, ControlsDialog,
+// GenericHelp, ZumaDialog, Dialog.
+constexpr uint32_t kDialogVtables[] = {0x8202428C, 0x82012A7C, 0x82023E24, 0x8200932C, 0x82011AC4, 0x8204D21C, 0x820BBD3C};
 constexpr uint32_t kBoardGun = 1136;         // Board's Gun (built by sub_821F2948 from Board's sub_8219DBE8)
 constexpr uint32_t kGunVtable = 0x82012848;  // Sexy::Gun
 constexpr uint32_t kGunCentre = 0x1DC;       // two floats, the board's coordinates
@@ -495,6 +500,28 @@ void Dispatch(PPCContext& ctx, uint8_t* base) {
         }
       };
       find_callouts(find_callouts, manager, 0);
+      // The first visible widget of a class in the same tree (the hit test's order).
+      auto find_visible = [&](uint32_t vtable) -> uint32_t {
+        uint32_t found = 0;
+        auto walk = [&](auto&& self, uint32_t container, int depth) -> void {
+          const uint32_t head = depth < 8 ? Load32(base, container + 4) : 0;
+          if (!head) return;
+          uint32_t node = Load32(base, head + 4);
+          for (int n = 0; node && node != head && n < 512 && !found; ++n) {
+            const uint32_t w = Load32(base, node + 8);
+            if (w && base[w + kWidgetVisible]) {
+              if (Load32(base, w) == vtable) {
+                found = w;
+                return;
+              }
+              self(self, w, depth + 1);
+            }
+            node = Load32(base, node + 4);
+          }
+        };
+        walk(walk, manager, 0);
+        return found;
+      };
       uint16_t prompt = 0;
       for (const uint32_t c : callouts) {
         if (base[c + kWidgetMouseVisible]) {
@@ -520,15 +547,34 @@ void Dispatch(PPCContext& ctx, uint8_t* base) {
       // each frame (about 10 frames for a large turn), and the touch's own MouseDown (WidgetManager::TouchBegan's) shot
       // 4 frames after the tap, the ball leaving on the way (the user, 2026-10-28: "the frog does not rotate and the
       // ball does not launch in the right direction"): the frog is turned outright instead, and the shot is A.
-      const uint32_t gun = widget ? Load32(base, widget + kBoardGun) : 0;
-      if (widget && Load32(base, widget) == kBoardVtable && gun && Load32(base, gun) == kGunVtable) {
-        int32_t lx = 0, ly = 0;
-        widget_at(x, y, &lx, &ly);
-        g_level = {true, false, frame, widget, gun, x, y, x, y, lx - x, ly - y};
-        if (g_armed_board != widget) g_armed_board = 0;  // a hold on another level aims nothing here
+      // The Board is the game's 864x648 in the middle of the screen, and the level's picture fills the screen around
+      // it: a tap there, outside the Board, lands on the ScreenTransitionWidget behind it (the user, 2026-10-28: the
+      // frog sometimes "doesn't turn"; `dense1`: every tap at x 200 or 1100 shot without turning, the transition
+      // widget taking no taps and so getting A). With a level on the screen, such a tap is the level's too.
+      uint32_t board = 0;
+      if (widget && Load32(base, widget) == kBoardVtable) {
+        board = widget;
+      } else if (widget && Load32(base, widget) == kScreenTransitionVtable) {
+        board = find_visible(kBoardVtable);
+      }
+      // Not under a dialog (the pause menu, Help & Options ...: A there would choose its entry).
+      if (board) {
+        for (const uint32_t dialog : kDialogVtables) {
+          if (find_visible(dialog)) board = 0;
+        }
+      }
+      const uint32_t gun = board ? Load32(base, board + kBoardGun) : 0;
+      if (board && gun && Load32(base, gun) == kGunVtable) {
+        // The Board's own coordinates: the point less its place (Widget mX / mY, +0x2C / +0x30; the WidgetManager's
+        // coordinates are the screen's less the mouse rectangle's corner).
+        const int32_t to_local_x = -int32_t(Load32(base, board + kWidgetX));
+        const int32_t to_local_y = -int32_t(Load32(base, board + kWidgetY));
+        g_level = {true, false, frame, board, gun, x, y, x, y, to_local_x, to_local_y};
+        if (g_armed_board != board) g_armed_board = 0;  // a hold on another level aims nothing here
         if (!g_armed_board) TurnFrog(base, g_level, x, y);
         if (REXCVAR_GET(zumasrevenge_touch_log)) {
-          REXLOG_INFO("[touch] board: touch at ({}, {}){}", lx, ly, g_armed_board ? " (aimed by a hold)" : "");
+          REXLOG_INFO("[touch] board: touch at ({}, {}){}{}", x + to_local_x, y + to_local_y,
+                      board == widget ? "" : " (beside the Board)", g_armed_board ? " (aimed by a hold)" : "");
         }
         continue;
       }
