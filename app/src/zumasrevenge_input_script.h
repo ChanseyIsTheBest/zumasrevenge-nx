@@ -34,6 +34,10 @@ void Press(uint16_t buttons, uint32_t frames);
 // zumasrevenge-nx (2026-10-27): the left stick at (lx, ly) for `frames` game frames and `buttons` for the frames from
 // `buttons_after` on (a level's tap: the frog aimed with the stick, then A while it is held).
 void PressStick(int16_t lx, int16_t ly, uint16_t buttons, uint32_t frames, uint32_t buttons_after);
+// zumasrevenge-nx (2026-10-28): a level's touch, as PressStick, but it gives up the earlier presses with the stick that
+// are still to come or under way and starts at once: a quick second tap must not wait behind the first's stick, which
+// would turn the frog back, and a hold renews its stick each frame.
+void Aim(int16_t lx, int16_t ly, uint16_t buttons, uint32_t frames, uint32_t buttons_after);
 
 // Pad presses so far, as the game reads its pads: a button pressed, or a stick or trigger pushed out of its rest, on any
 // pad but the touch controls' own (Press). A touch hides the board's cursor until this changes (zumasrevenge_touch.cpp).

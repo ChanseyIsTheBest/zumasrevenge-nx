@@ -219,3 +219,28 @@ menu items clickable and tapping in levels shoots the ball in that direction". `
   levels where the frog moves between lily pads, the boss levels, the other modes' screens.
 - **Delivered:** `out/dist/dev_20261027_zumasrevenge/zumasrevenge-nx/` (NRO `3307b7db...`: the optimised build with
   touch; the README with the touch controls); ELF and map `out/nx/elf/zumasrevenge_dev_touch_20261027.*`.
+
+## Touch: the frog's aim, and hold to aim (2026-10-28)
+
+The user: "Often when touching and sending out the ball in zuma's revenge the frog does not rotate and the ball does
+not launch in the right direction", then "if you do a tap held down you can rotate the frog/aiming reticle and when you
+tap again you fire" (both games).
+
+- **Why the shots went astray** (a PC run's per-frame watch of the Gun and the Board after each tap, `aim1` / `aim2`):
+  the frog's direction is Gun +0x254 (radians, 0 down the screen, a quarter turn right, 0..2 pi; +0x258 the same), and
+  the game turns it a little each frame towards its aim (about 10 frames for a large turn). Past level 1-1's lesson the
+  touch's own MouseDown (WidgetManager::TouchBegan's) shot 4 frames after the tap (Gun +0x13C 0 -> 2, +0x25C the reload
+  from 0.07 back to 1), with the frog still on its way: tapping at 1.90 from 0.35 shot at 1.53; 0.12 -> 5.43 shot at
+  5.65. The farther the turn, the worse the miss.
+- **Now:** a touch in a level never reaches the game's touch path. The frog is turned outright (Gun +0x254 / +0x258)
+  and the shot is A with the stick held its way (`input_script::Aim`, which also replaces an earlier tap's stick that
+  is still held, so a quick second tap is not turned back): level 1-1's lesson ("HOLD LEFT AND SHOOT") waits for a
+  shot with the stick held.
+- **Hold to aim:** a touch longer than 12 frames (0.2 s) or one that moves more than 24 pixels is a hold: the frog
+  follows the finger (the stick held its way each frame) and nothing is shot; the frog stays aimed, and the next tap on
+  that level shoots where it points, wherever it lands. A tap otherwise turns the frog to it and shoots when it ends.
+- **Checked** (PC, `hold1`, touch alone): the lesson passed; taps shot at their angle (the Gun's shot state 2 eight
+  frames after, the frog on the tap's angle); a hold dragged to the upper right (1.897) shot nothing, and the next tap
+  at the lower left shot at 1.895; a still hold (0.5 s) aimed and the next tap shot there; a hold while aimed aimed
+  again. Before the change (`aim3` / `aim4`, the frog turned outright but the touch still sent): the frog on the tap's
+  angle within 0.003 at the shot, against misses up to 0.37 before.

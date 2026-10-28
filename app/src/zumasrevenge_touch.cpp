@@ -19,7 +19,8 @@
 //     ("A Select", "B Back") presses its button;
 //   - the title (LoadingScreen): A;
 //   - the main menu (MainMenu): the tapped entry selected, then A;
-//   - a level (Board): the frog aimed at the tap (the PC game's mouse aim and the stick), then A;
+//   - a level (Board): a tap turns the frog to it and shoots (A, the stick held there); a held touch turns the frog
+//     after the finger without shooting, and the next tap then shoots where it points;
 //   - any other whole-screen widget without mouse input (the story, the island map, a level's end): A.
 //
 // The app object: SexyAppBase's constructor (sub_8243FB90: stores the SexyAppBase vtables 0x820B04AC / 0x820B049C at
@@ -33,6 +34,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cstdlib>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -78,6 +80,14 @@ constexpr uint32_t kBoardVtable = 0x820032BC;  // Sexy::Board, a level
 constexpr uint32_t kBoardGun = 1136;         // Board's Gun (built by sub_821F2948 from Board's sub_8219DBE8)
 constexpr uint32_t kGunVtable = 0x82012848;  // Sexy::Gun
 constexpr uint32_t kGunCentre = 0x1DC;       // two floats, the board's coordinates
+// zumasrevenge-nx (2026-10-28, a PC run's per-frame watch of the Gun after taps, `aim2`): the frog's direction in
+// radians at +0x254, the same at +0x258 (0 points down the screen, a quarter turn right, 0..2 pi). The game turns it a
+// little each frame towards its aim (about 10 frames for a large turn).
+constexpr uint32_t kGunAngle = 0x254;
+// A touch in a level that lasts longer than this (0.2 s at 60 frames a second), or moves further than this (the game's
+// coordinates, 1:1 with the screen's pixels), is a hold.
+constexpr uint64_t kHoldFrames = 12;
+constexpr int32_t kHoldMove = 24;
 constexpr uint32_t kMainMenuVtable = 0x8202148C;  // Sexy::MainMenu
 constexpr uint32_t kMainMenuSelection = 228;
 constexpr uint32_t kWidgetMouseDown = 0x82416470;  // Widget::MouseDown(x, y, clicks), slot 54: no handling of its own
@@ -154,6 +164,51 @@ inline float LoadF32(const uint8_t* base, uint32_t address) {
   float f;
   std::memcpy(&f, &w, 4);
   return f;
+}
+inline void StoreF32(uint8_t* base, uint32_t address, float value) {
+  uint32_t w;
+  std::memcpy(&w, &value, 4);
+  Store32(base, address, w);
+}
+
+// A touch in a level (the user, 2026-10-28: "if you do a tap held down you can rotate the frog/aiming reticle and when
+// you tap again you fire"). A tap turns the frog to it and shoots when it ends. A hold turns the frog after the finger
+// and does not shoot; the frog stays aimed (`g_armed_board`), and the next tap on that Board shoots where it points,
+// wherever it lands (a hold then aims again). The game never sees these touches: its own touch path (TouchBegan's
+// MouseDown) would shoot at once.
+struct LevelTouch {
+  bool active = false;  // a touch that began on the Board is down
+  bool hold = false;    // it is a hold
+  uint64_t start = 0;   // the frame it began
+  uint32_t board = 0, gun = 0;
+  int32_t start_x = 0, start_y = 0, x = 0, y = 0;  // the game's coordinates (WidgetManager's)
+  int32_t to_local_x = 0, to_local_y = 0;          // from those to the Board's own
+};
+LevelTouch g_level;
+uint32_t g_armed_board = 0;
+
+// The frog turned to (x, y), the game's coordinates, at once; returns its angle (unchanged when the point is on its
+// pivot: the Gun's centre at +0x1DC / +0x1E0, the point the game's mouse aim measures from, sub_8218C988).
+float TurnFrog(uint8_t* base, const LevelTouch& t, int32_t x, int32_t y) {
+  const float dx = float(x + t.to_local_x) - LoadF32(base, t.gun + kGunCentre);
+  const float dy = float(y + t.to_local_y) - LoadF32(base, t.gun + kGunCentre + 4);
+  if (dx * dx + dy * dy < 1.0f) return LoadF32(base, t.gun + kGunAngle);
+  float angle = std::atan2(dx, dy);
+  if (angle < 0.0f) angle += 6.2831853f;
+  StoreF32(base, t.gun + kGunAngle, angle);
+  StoreF32(base, t.gun + kGunAngle + 4, angle);
+  return angle;
+}
+
+// The touch controls' stick pointing the frog's way (the stick's Y is up, the screen's down).
+void StickAlong(float angle, int16_t& sx, int16_t& sy) {
+  sx = int16_t(std::sin(angle) * 30000.0f);
+  sy = int16_t(-std::cos(angle) * 30000.0f);
+}
+
+bool LevelTouchValid(const uint8_t* base, const LevelTouch& t) {
+  return Load32(base, t.board) == kBoardVtable && Load32(base, t.board + kBoardGun) == t.gun &&
+         Load32(base, t.gun) == kGunVtable;
 }
 
 // Whether the guest has [address, address + size) mapped, for a word that may not hold a pointer (bejeweled3-nx).
@@ -246,12 +301,19 @@ extern "C" REX_FUNC(__imp__sub_8241F1E8);  // WidgetManager::TouchEnded(SexyTouc
 namespace zumasrevenge::touch {
 
 void OnWindowMouse(MouseKind kind, float x, float y) {
+  static bool down = false;  // the window's thread only
   switch (kind) {
-    case MouseKind::kDown: Push(Phase::kBegan, x, y); break;
-    case MouseKind::kMove:
-      if (g_down) Push(Phase::kMoved, x, y);
+    case MouseKind::kDown:
+      down = true;
+      Push(Phase::kBegan, x, y);
       break;
-    case MouseKind::kUp: Push(Phase::kEnded, x, y); break;
+    case MouseKind::kMove:
+      if (down) Push(Phase::kMoved, x, y);
+      break;
+    case MouseKind::kUp:
+      down = false;
+      Push(Phase::kEnded, x, y);
+      break;
   }
 }
 
@@ -262,6 +324,27 @@ void Dispatch(PPCContext& ctx, uint8_t* base) {
 #if REX_PLATFORM_SWITCH
   PollSwitch();
 #endif
+  // A touch in a level, each frame: past kHoldFrames it is a hold. A hold turns the frog after the finger with the
+  // stick held its way; a touch that may still be a tap turns it too, unless a hold aimed it before (the tap then
+  // shoots where it points). The level gone (its end, the next one), the touch ends.
+  if (g_level.active) {
+    if (!LevelTouchValid(base, g_level)) {
+      g_level.active = false;
+    } else {
+      if (!g_level.hold && frame - g_level.start >= kHoldFrames) {
+        g_level.hold = true;
+        if (REXCVAR_GET(zumasrevenge_touch_log)) REXLOG_INFO("[touch] board: a hold, aiming");
+      }
+      if (g_level.hold || g_armed_board != g_level.board) {
+        const float angle = TurnFrog(base, g_level, g_level.x, g_level.y);
+        if (g_level.hold) {
+          int16_t sx, sy;
+          StickAlong(angle, sx, sy);
+          zumasrevenge::input_script::Aim(sx, sy, 0, 3, 0);
+        }
+      }
+    }
+  }
   std::deque<Touch> touches;
   {
     std::lock_guard<std::mutex> lock(g_mutex);
@@ -354,7 +437,38 @@ void Dispatch(PPCContext& ctx, uint8_t* base) {
   for (const Touch& t : touches) {
     const int32_t x = left + std::min<int32_t>(int32_t(t.x * float(width)), width - 1);
     const int32_t y = top + std::min<int32_t>(int32_t(t.y * float(height)), height - 1);
-    if (t.phase == Phase::kBegan && g_down) continue;  // one touch at a time (bejeweled3-nx)
+    if (g_level.active && t.phase != Phase::kBegan) {
+      g_level.x = x;
+      g_level.y = y;
+      if (std::abs(x - g_level.start_x) > kHoldMove || std::abs(y - g_level.start_y) > kHoldMove) g_level.hold = true;
+      if (t.phase == Phase::kEnded) {
+        g_level.active = false;
+        if (!LevelTouchValid(base, g_level)) continue;
+        if (g_level.hold) {
+          // A hold: the frog stays where it points, and the next tap shoots there.
+          g_armed_board = g_level.board;
+          if (REXCVAR_GET(zumasrevenge_touch_log)) {
+            REXLOG_INFO("[touch] board: held to ({}, {}), the frog at {}: the next tap shoots", x, y,
+                        LoadF32(base, g_level.gun + kGunAngle));
+          }
+        } else {
+          // A tap: the frog turned to it (unless a hold aimed it), then A with the stick held its way (level 1-1's
+          // lesson, "HOLD LEFT AND SHOOT", waits for a shot with the stick held).
+          const bool armed = g_armed_board == g_level.board;
+          const float angle = armed ? LoadF32(base, g_level.gun + kGunAngle) : TurnFrog(base, g_level, x, y);
+          int16_t sx, sy;
+          StickAlong(angle, sx, sy);
+          zumasrevenge::input_script::Aim(sx, sy, kPadA, 8, 2);
+          g_armed_board = 0;
+          if (REXCVAR_GET(zumasrevenge_touch_log)) {
+            REXLOG_INFO("[touch] board: tap at ({}, {}){}, the frog at {}: A", x, y, armed ? " after a hold" : "",
+                        angle);
+          }
+        }
+      }
+      continue;
+    }
+    if (t.phase == Phase::kBegan && (g_down || g_level.active)) continue;  // one touch at a time (bejeweled3-nx)
     if (t.phase != Phase::kBegan && !g_down) continue;  // the game never saw its start
     if (t.phase == Phase::kBegan) {
       // The button prompts' layers ("A Select", "B Back", "A Shoot" ...): a whole-screen ButtonCalloutWidget over a
@@ -402,29 +516,19 @@ void Dispatch(PPCContext& ctx, uint8_t* base) {
         continue;
       }
       const uint32_t widget = widget_at(x, y);
-      // A level (the Board): the touch aims the frog (the PC game's Board::MouseMove, which WidgetManager::TouchBegan
-      // calls first), and the console's own shot follows: A (Board::MouseDown, the PC's click, ends early in the
-      // console game's state).
-      if (widget && Load32(base, widget) == kBoardVtable) {
-        send(t.phase, x, y);
-        // The stick too, from the frog's pivot (the Gun at +1136: its centre at +0x1DC / +0x1E0, the point the game's
-        // mouse aim measures from, sub_8218C988) towards the tap: level 1-1's lesson ("HOLD LEFT AND SHOOT") waits for
-        // a shot with the stick held, and the stick sets the frog's direction outright, the touch's own.
+      // A level (the Board): a touch of its own (LevelTouch above). The game turns the frog towards its aim a little
+      // each frame (about 10 frames for a large turn), and the touch's own MouseDown (WidgetManager::TouchBegan's) shot
+      // 4 frames after the tap, the ball leaving on the way (the user, 2026-10-28: "the frog does not rotate and the
+      // ball does not launch in the right direction"): the frog is turned outright instead, and the shot is A.
+      const uint32_t gun = widget ? Load32(base, widget + kBoardGun) : 0;
+      if (widget && Load32(base, widget) == kBoardVtable && gun && Load32(base, gun) == kGunVtable) {
         int32_t lx = 0, ly = 0;
         widget_at(x, y, &lx, &ly);
-        int16_t sx = 0, sy = 0;
-        if (const uint32_t gun = Load32(base, widget + kBoardGun); gun && Load32(base, gun) == kGunVtable) {
-          const float dx = float(lx) - LoadF32(base, gun + kGunCentre);
-          const float dy = float(ly) - LoadF32(base, gun + kGunCentre + 4);
-          const float len = std::sqrt(dx * dx + dy * dy);
-          if (len >= 1.0f) {
-            sx = int16_t(dx / len * 30000.0f);
-            sy = int16_t(-dy / len * 30000.0f);  // the stick's Y is up, the screen's down
-          }
-        }
-        zumasrevenge::input_script::PressStick(sx, sy, kPadA, 10, 6);
+        g_level = {true, false, frame, widget, gun, x, y, x, y, lx - x, ly - y};
+        if (g_armed_board != widget) g_armed_board = 0;  // a hold on another level aims nothing here
+        if (!g_armed_board) TurnFrog(base, g_level, x, y);
         if (REXCVAR_GET(zumasrevenge_touch_log)) {
-          REXLOG_INFO("[touch] board: aimed at ({}, {}), stick ({}, {}), A", lx, ly, sx, sy);
+          REXLOG_INFO("[touch] board: touch at ({}, {}){}", lx, ly, g_armed_board ? " (aimed by a hold)" : "");
         }
         continue;
       }

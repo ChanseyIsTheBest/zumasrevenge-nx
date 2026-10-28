@@ -401,6 +401,23 @@ void PressStick(int16_t lx, int16_t ly, uint16_t buttons, uint32_t frames, uint3
   g_press_next = p.until + kReleaseFrames;
 }
 
+void Aim(int16_t lx, int16_t ly, uint16_t buttons, uint32_t frames, uint32_t buttons_after) {
+  const uint64_t now = g_zumasrevenge_game_frames.load(std::memory_order_relaxed);
+  std::lock_guard<std::mutex> lock(g_press_mutex);
+  std::erase_if(g_presses, [](const Scheduled& p) { return p.lx || p.ly; });
+  g_press_next = 0;
+  for (const Scheduled& p : g_presses) g_press_next = std::max(g_press_next, p.until + kReleaseFrames);
+  Scheduled p;
+  p.from = std::max(now, g_press_next);
+  p.until = p.from + frames;
+  p.buttons = buttons;
+  p.lx = lx;
+  p.ly = ly;
+  p.buttons_from = p.from + buttons_after;
+  g_presses.push_back(p);
+  g_press_next = p.until + kReleaseFrames;
+}
+
 InputFactory Wrap(InputFactory base) {
   return [base = std::move(base)](bool tool_mode) -> std::unique_ptr<rex::system::IInputSystem> {
     auto system = base(tool_mode);
