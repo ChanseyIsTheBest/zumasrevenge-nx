@@ -274,3 +274,8 @@ on github and do the installer so release zuma's revenge now".
 - **The installer** (zumasrevenge-nx-installer, from feedingfrenzy-nx-installer): the game's package or a folder with
   `default.xex` and `main.rsb`, `default.xex` checked by its SHA-256 and the other 5 files by their sizes; the NRO carries
   all 75 shaders. Its game pack (372 MB) is `tools/build_asset_pack.py`'s byte for byte apart from the pack id.
+- **Published** (the user: "LTO release it on github and do the installer so release zuma's revenge now"):
+  https://github.com/ChanseyIsTheBest/zumasrevenge-nx (release v1.0.0 with `zumasrevenge.nro`, `4ad10dc5...`) and the
+  installer page https://chanseyisthebest.github.io/zumasrevenge-nx-installer/ (repository zumasrevenge-nx-installer;
+  its deployment downloads the NRO from the release and checks it against `release/manifest.json`; the live page serves
+  `4ad10dc5...`).
