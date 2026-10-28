@@ -255,3 +255,22 @@ tap again you fire" (both games).
   10,150 points.
 - **1.0.0 test build:** version 1.0.0, author ChanseyIsTheBest, the icon `out/icon.jpg` (the user's
   `zumarevenge.webp`, 256x256; not committed); no LTO yet. NRO `7fe1a172...`, `check_switch_build.py` passed.
+
+## 1.0.0 (2026-10-28)
+
+The user: "make zumarevenge.webp the icon make the version 1.0.0 and the author ChanseyIsTheBest", then "LTO release it
+on github and do the installer so release zuma's revenge now".
+
+- **The NRO:** version 1.0.0, author ChanseyIsTheBest, the icon `out/icon.jpg` (the user's `zumarevenge.webp`, 256x256;
+  not committed), logging off (the built-in settings, as Zuma's release: only a crash writes `logs/rex/rex_crash.log`),
+  link-time optimisation on, no profile-guided optimisation (`build_switch.ps1 -Jobs 6 -Pgo none -Define
+  "ZUMASREVENGE_SWITCH_LTO=ON"`; with 12 jobs, and with 5 while another session's Ryujinx held 13 GB, the compilers ran
+  out of memory). NRO `4ad10dc5...`; `tools/check_switch_build.py`: all checks passed. The player's `zumasrevenge.toml`
+  has the language, the controllers and `zumasrevenge_touch`.
+- **Ryujinx:** `rel1`, the zip the installer's code made, a first start with no `zumasrevenge.toml`: the game wrote
+  `zumasrevenge.toml`, `deko3d_shaders.bin` and `pipeline_list.bin` and nothing else (no `logs/`, no `deko3d.log`), no
+  emulator error. `rel_play` (the same NRO, touch alone, a test toml): the title, the menus and level 1-1 played, 38
+  level taps, combos, 21,300 points.
+- **The installer** (zumasrevenge-nx-installer, from feedingfrenzy-nx-installer): the game's package or a folder with
+  `default.xex` and `main.rsb`, `default.xex` checked by its SHA-256 and the other 5 files by their sizes; the NRO carries
+  all 75 shaders. Its game pack (372 MB) is `tools/build_asset_pack.py`'s byte for byte apart from the pack id.
