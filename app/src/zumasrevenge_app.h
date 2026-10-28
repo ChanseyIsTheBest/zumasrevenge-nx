@@ -258,10 +258,11 @@ class ZumasRevengeApp : public rex::ReXApp {
   }
 #endif
 
-  // The PC: the left mouse button and the pointer are the game's touches (zumasrevenge_touch; the Switch reads its
-  // touch screen itself). bejeweled3-nx's.
+  // The PC: the left mouse button and the pointer are the game's touches, the right button a second finger
+  // (zumasrevenge_touch; the Switch reads its touch screen itself). bejeweled3-nx's.
   void OnMouseDown(rex::ui::MouseEvent& e) override {
     if (e.button() == rex::ui::MouseEvent::Button::kLeft) ForwardMouse(zumasrevenge::touch::MouseKind::kDown, e);
+    if (e.button() == rex::ui::MouseEvent::Button::kRight) ForwardMouse(zumasrevenge::touch::MouseKind::kSecond, e);
   }
   void OnMouseMove(rex::ui::MouseEvent& e) override { ForwardMouse(zumasrevenge::touch::MouseKind::kMove, e); }
   void OnMouseUp(rex::ui::MouseEvent& e) override {

@@ -8,7 +8,7 @@
 
 namespace zumasrevenge::touch {
 
-enum class MouseKind { kDown, kMove, kUp };
+enum class MouseKind { kDown, kMove, kUp, kSecond };
 
 // The PC window's left mouse button and pointer, as 0..1 of the window (called from the window's input thread).
 void OnWindowMouse(MouseKind kind, float x, float y);

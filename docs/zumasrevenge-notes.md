@@ -256,6 +256,45 @@ tap again you fire" (both games).
 - **1.0.0 test build:** version 1.0.0, author ChanseyIsTheBest, the icon `out/icon.jpg` (the user's
   `zumarevenge.webp`, 256x256; not committed); no LTO yet. NRO `7fe1a172...`, `check_switch_build.py` passed.
 
+## Touch: two fingers swap the balls (2026-10-28)
+
+The user: "Forgot to implement ball swapping in zuma and zuma's revenge when using the touch screen ... I was thinking
+tapping with two fingers at the screen at the same time does it". The game's swap is B (the pad's, checked below; the
+PC game's right mouse button, `main.rsb`'s score tip).
+
+- **The Switch's touch screen** is now followed by finger: the touch is the first finger (its `finger_id`), and another
+  finger landing while it is down is a new event, `kSecond` (each time the count of fingers reaches two). When the
+  first finger lifts, the touch ends where it was, and the other fingers are ignored until all have lifted (before, the
+  next finger became `touches[0]` and the touch jumped to it). The PC: the right mouse button with the left held; test
+  scripts: `<frame>:second:<x>:<y>`.
+- **In a level** a second finger presses B. A touch that is not a hold yet is then no tap: the Gun's angle (+0x254 /
+  +0x258) goes back to what it was before the touch (the first finger may land a frame early and turn the frog), and
+  its end shoots nothing. A hold goes on aiming and stays aimed when it ends, so a finger can hold the aim while another
+  swaps. Outside a level a second finger does nothing (B is the menus' back).
+- **Checked** (PC, touch alone): `swap1` (during level 1-1's lesson, both balls red): two-finger taps at once and 2
+  frames apart turned and shot nothing. `swap2` (after the lesson): a hold with two second fingers 1 s apart swapped
+  twice (red in the mouth and yellow on the back changed places, shots 97 -> 98 -> 99), the frog stayed on the hold's
+  angle, and the next tap shot there.
+
+## Touch: each shot waits for the frog (2026-10-28)
+
+The user: "zuma's revenge also has same issue but less frequent" (Zuma's: quick taps shot the wrong way), and "stop
+the frog from turning for a frame when doing a double tap".
+
+- **What went wrong** (`watch1`, a PC run's per-frame watch of the Gun after taps): the Gun's +0x13C is its shot's
+  state, 0 ready, 1 the shot leaving (two frames after the tap's A began), 2 the next ball coming up (+0x25C its size,
+  0.07 to 1); a shot and its reload take 12 frames, and A meanwhile is ignored. Of six taps 8 frames apart, the three
+  in a reload shot nothing; a touch right after a tap could turn the frog before that tap's A shot.
+- **Now** (`ServeShots`): each tap's shot waits for the Gun to be ready (+0x13C 0), with the frog held on the tap's
+  angle until the shot left (+0x13C 2), then A with the stick held its way; then the next. At most 2 wait (a newer tap
+  takes the last one's place); a shot not taken within 20 frames of its A, or whose level ended or is under a dialog,
+  is given up. A hold's stick waits while a shot does.
+- **A touch turns the frog from its 5th frame** (a tap at its end, when it shoots): a two-finger tap's first finger no
+  longer turns it for a frame before the second lands.
+- **Checked** (PC, `watch2`): the six taps 8 frames apart shot at 4.347, 0.936, 5.409, 3.087 and 0.039, each its tap's
+  angle (the fourth tap's shot taken by the fifth's place), one every 14 frames; taps beside the Board and at its
+  edges shot at their angles; level 1-1's lesson passed. `swap3`: the two-finger swaps and the hold as before.
+
 ## 1.0.0 (2026-10-28)
 
 The user: "make zumarevenge.webp the icon make the version 1.0.0 and the author ChanseyIsTheBest", then "LTO release it
@@ -279,3 +318,10 @@ on github and do the installer so release zuma's revenge now".
   installer page https://chanseyisthebest.github.io/zumasrevenge-nx-installer/ (repository zumasrevenge-nx-installer;
   its deployment downloads the NRO from the release and checks it against `release/manifest.json`; the live page serves
   `4ad10dc5...`).
+
+## 1.0.1 (2026-10-28)
+
+The user, after trying it on the console: "release it as 1.0.1". Version 1.0.1: the two-finger ball swap, each shot
+waiting for the frog, and no turn in a touch's first frames (the sections above). NRO `b18c473c...` (link-time
+optimisation, no PGO, logging off as 1.0.0's; `tools/check_switch_build.py`: all checks passed); the game pack is
+1.0.0's. Release v1.0.1 on GitHub; the installer page's manifest takes its NRO.

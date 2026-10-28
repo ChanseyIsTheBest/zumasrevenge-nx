@@ -73,6 +73,8 @@ To use the buttons by letter instead (the Switch's A acts as A), set `input_xbox
 - in a level, tap where the ball should go (anywhere on the screen): the frog turns there and shoots;
 - or touch and hold: the frog follows your finger without shooting, and stays aimed when you let go; your next tap
   then shoots where it points, wherever you tap;
+- tap with two fingers at once to swap the balls (B); nothing is shot, and the frog keeps its aim (while you hold a
+  finger to aim, a tap with a second finger swaps too);
 - tap a menu entry, a dialog's button, or an on-screen prompt ("A Select", "B Back") to use it;
 - on the title, the story and the island map, tap anywhere to continue.
 
