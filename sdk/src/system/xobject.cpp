@@ -9,8 +9,13 @@
  * @modified    Tom Clay, 2026 - Adapted for ReXGlue runtime
  */
 
+#include <chrono>
+#include <string>
 #include <vector>
 
+#include <fmt/format.h>
+#include <rex/cvar.h>     // diag_long_waits_ms (zumasrevenge-nx, 2026-11-25)
+#include <rex/logging.h>
 #include <rex/chrono/clock.h>
 #include <rex/stream.h>
 #include <rex/system/kernel_state.h>
@@ -193,6 +198,39 @@ uint32_t XObject::TimeoutTicksToMs(int64_t timeout_ticks) {
   }
 }
 
+// zumasrevenge-nx (2026-11-25, Zuma's Revenge's intro: the game's thread and the movie player's decode thread both
+// idle for 120-140 ms at the same points of the movie every run): which waits last that long, of which threads, on what.
+REXCVAR_DEFINE_INT32(diag_long_waits_ms, 0, "Kernel",
+                     "Diagnostic: a [wait] line for every guest wait (on an object, on several, or a sleep) that lasted "
+                     "at least this many ms: the thread, the objects' types and guest addresses, the timeout, the result "
+                     "and the guest's return address; 0 = off")
+    .range(0, 100000);
+
+void NoteLongWait(const char* what, std::chrono::steady_clock::time_point t0, std::chrono::milliseconds timeout,
+                  int result, XObject* const* objects, uint32_t count) {
+  static const int threshold = REXCVAR_GET(diag_long_waits_ms);
+  if (threshold <= 0) return;
+  const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+  if (ms < threshold) return;
+  std::string on;
+  for (uint32_t i = 0; i < count && i < 4; ++i)
+    on += fmt::format("{}type {} at {:08X}", i ? ", " : "", uint32_t(objects[i]->type()), objects[i]->guest_object());
+  XThread* thread = XThread::GetCurrentThread();
+  const uint32_t lr = thread && thread->thread_state() && thread->thread_state()->context()
+                          ? uint32_t(thread->thread_state()->context()->lr)
+                          : 0;
+  REXKRNL_INFO("[wait] guest thread {} waited {:.1f} ms in {} ({}), timeout {}, result {:X}, from {:08X}",
+               thread ? thread->thread_id() : 0, ms, what, on.empty() ? std::string("-") : on,
+               timeout == std::chrono::milliseconds::max() ? std::string("none") : fmt::format("{} ms", timeout.count()),
+               uint32_t(result), lr);
+}
+
+// 1.0.2: the clock is read only when diag_long_waits_ms is on (off, a wait costs nothing more).
+bool DiagLongWaitsOn() {
+  static const bool on = REXCVAR_GET(diag_long_waits_ms) > 0;
+  return on;
+}
+
 X_STATUS XObject::Wait(uint32_t wait_reason, uint32_t processor_mode, uint32_t alertable,
                        uint64_t* opt_timeout) {
   REX_SYS_CENSUS(rex::syscount::kCensusWait, 1);
@@ -207,7 +245,12 @@ X_STATUS XObject::Wait(uint32_t wait_reason, uint32_t processor_mode, uint32_t a
                                 : std::chrono::milliseconds::max();
 
   XThread::CheckTitleTermination();
+  const auto diag_t0 = DiagLongWaitsOn() ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
   auto result = rex::thread::Wait(wait_handle, alertable ? true : false, timeout_ms);
+  {
+    XObject* self = this;
+    NoteLongWait("a wait", diag_t0, timeout_ms, int(result), &self, 1);
+  }
   XThread::CheckTitleTermination();
   switch (result) {
     case rex::thread::WaitResult::kSuccess:
@@ -267,9 +310,12 @@ X_STATUS XObject::WaitMultiple(uint32_t count, XObject** objects, uint32_t wait_
                                 : std::chrono::milliseconds::max();
 
   XThread::CheckTitleTermination();
+  const auto diag_t0 =  // diag_long_waits_ms
+      DiagLongWaitsOn() ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
   if (wait_type) {
     auto result =
         rex::thread::WaitAny(std::move(wait_handles), alertable ? true : false, timeout_ms);
+    NoteLongWait("a wait for any", diag_t0, timeout_ms, int(result.first), objects, count);
     XThread::CheckTitleTermination();
     switch (result.first) {
       case rex::thread::WaitResult::kSuccess:
@@ -291,6 +337,7 @@ X_STATUS XObject::WaitMultiple(uint32_t count, XObject** objects, uint32_t wait_
   } else {
     auto result =
         rex::thread::WaitAll(std::move(wait_handles), alertable ? true : false, timeout_ms);
+    NoteLongWait("a wait for all", diag_t0, timeout_ms, int(result), objects, count);
     XThread::CheckTitleTermination();
     switch (result) {
       case rex::thread::WaitResult::kSuccess:

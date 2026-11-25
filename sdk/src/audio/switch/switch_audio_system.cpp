@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>  // audio_diag_gap_ms (zumasrevenge-nx, 2026-11-25)
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -39,9 +40,26 @@ REXCVAR_DEFINE_INT32(audio_switch_frames_in_queue, 10, "Audio",
                      "output, at the cost of latency: masseffect_audio_wait_server_ms waits up to 30 ms; read "
                      "when the audio is opened");
 
+// zumasrevenge-nx (2026-11-25): audio_diag_gap_ms (audio_system.cpp) for the device's releases, the pump's requests and
+// the game's frames submitted.
+REXCVAR_DECLARE(int32_t, audio_diag_gap_ms);
+
 namespace rex::audio::nx {
 
 namespace {
+
+int DiagGapMs() {
+  static const int ms = REXCVAR_GET(audio_diag_gap_ms);
+  return ms;
+}
+double MsSince(std::chrono::steady_clock::time_point t) {
+  return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t).count();
+}
+// The last frame the game submitted (any driver), for audio_diag_gap_ms.
+std::atomic<int64_t> g_diag_last_submit_ns{0};
+int64_t NowNsDiag() {
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
 
 // Guest frames per audout buffer, and buffers kept queued in the device.
 // 4 frames are 1024 samples (21.3 ms), the block size MarathonRecomp-NX found
@@ -100,6 +118,11 @@ void SwitchAudioDriver::SubmitFrame(uint32_t frame_ptr) {
     }
   }
   std::memcpy(output_frame, input_frame, kFrameSamples * sizeof(float));
+  if (DiagGapMs() > 0) {  // audio_diag_gap_ms: the game's frames' gaps
+    const int64_t now = NowNsDiag(), last = g_diag_last_submit_ns.exchange(now);
+    if (last && (now - last) / 1000000 >= DiagGapMs())
+      REXLOG_INFO("[audio] the game submitted no frame for {:.1f} ms", double(now - last) / 1e6);
+  }
   std::lock_guard<std::mutex> guard(frames_mutex_);
   frames_queued_.push(output_frame);
 }
@@ -350,14 +373,26 @@ void SwitchAudioSystem::FillAndAppend(size_t buffer_index) {
 
 void SwitchAudioSystem::PumpTick() {
   std::lock_guard<std::mutex> guard(drivers_mutex_);
+  // audio_diag_gap_ms: the pump's requests' gaps (no request while the queue is full)
+  static std::chrono::steady_clock::time_point last_request = std::chrono::steady_clock::now();
+  bool requested = false;
+  size_t max_queued = 0;
   for (SwitchAudioDriver* driver : drivers_) {
     const size_t queued = driver->QueuedFrames();
+    max_queued = std::max(max_queued, queued);
     if (queued <= output_->frames_in_queue) {
       driver->RequestFrame();
+      requested = true;
     }
     if (queued < kMinQueuedFrames) {
       driver->RequestFrame();  // the queue has emptied: one more to catch up
     }
+  }
+  if (requested) {
+    if (DiagGapMs() > 0 && MsSince(last_request) >= DiagGapMs())
+      REXLOG_INFO("[audio] the pump requested no frame for {:.1f} ms (the queue full: {} frames)", MsSince(last_request),
+                  max_queued);
+    last_request = std::chrono::steady_clock::now();
   }
 }
 
@@ -385,6 +420,13 @@ void SwitchAudioSystem::OutputThreadMain() {
     AudioOutBuffer* released = nullptr;
     u32 released_count = 0;
     Result rc = audoutWaitPlayFinish(&released, &released_count, timeout_ns);
+    // audio_diag_gap_ms: the device's releases' gaps
+    static std::chrono::steady_clock::time_point last_release = std::chrono::steady_clock::now();
+    if (R_SUCCEEDED(rc) && released && released_count) {
+      if (DiagGapMs() > 0 && MsSince(last_release) >= DiagGapMs())
+        REXLOG_INFO("[audio] the device released no buffer for {:.1f} ms", MsSince(last_release));
+      last_release = std::chrono::steady_clock::now();
+    }
     // libnx hands back one released buffer per call; drain the rest so none is
     // left out of the rotation.
     while (R_SUCCEEDED(rc) && released && released_count) {

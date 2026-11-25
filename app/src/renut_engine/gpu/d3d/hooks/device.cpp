@@ -897,7 +897,13 @@ REXCVAR_DEFINE_BOOL(sa2_renut_core_layout, false, "ZumasRevenge/Renderer",
                     "guest thread on any core, as before. Peggle 2: on with the CPU master (zumasrevenge_enhancements.cpp)")
     .lifecycle(rex::cvar::Lifecycle::kInitOnly);
 
+// zumasrevenge-nx (2026-11-25): zumasrevenge_wmv_ffmpeg.cpp's movie timing log takes every presented frame here: the
+// game's D3DDevice_Swap and the threaded movie player's D3DDevice_Present (draw.cpp) both come here (nothing unless a
+// movie is open and zumasrevenge_movie_timing_log is on).
+extern "C" void zumasrevenge_movie_note_swap(uint32_t interval);
+
 void D3DDevice_Swap_hook(u32 device_va, u32 front_buffer, u32 /*parameters*/) {
+  zumasrevenge_movie_note_swap(0);
   // sa2-nx (2026-10-20, sa2_renut_core_layout, the Switch): once, the guest main thread alone on core 0, the other
   // guest threads on cores 1-2 (preferring 2: the render thread is pinned to core 1 at a higher priority). Before, every
   // guest thread could run on any core, and at their priority Horizon time-slices the threads of a core in 10 ms slices.

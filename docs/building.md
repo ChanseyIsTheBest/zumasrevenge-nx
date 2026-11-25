@@ -75,11 +75,16 @@ python tools\renut_switch_shader_cache.py
 
 ## 4. The NRO
 
-The NRO carries all 75 of the game's shaders (4 of them exist only while the game runs), so the installer has none to make.
-The release is built with link-time optimisation and without profile-guided optimisation:
+Since 2026-11-24 the release NRO carries only the 4 shaders the game compiles while it runs (they exist in no file);
+the web installer makes the 71 that default.xex stores (`deko3d_glsl.bin` beside the NRO, as in bejeweled3-nx).
+`tools/renut_release_shaders.py --image` writes `out\renut_switch_release` (the 4 built in, the shader table without
+SPIR-V; `sd\deko3d_glsl.bin` is a test copy of the stored ones, game data, never distributed), and
+`ZUMASREVENGE_RENUT_RELEASE_SHADERS=ON` builds from it. The release is built with link-time optimisation and without
+profile-guided optimisation:
 
 ```powershell
-powershell -File tools\win\build_switch.ps1 -Jobs 12 -BuildDir out\nx -Log out\nx_build.log -Pgo none -Define "ZUMASREVENGE_SWITCH_LTO=ON"
+python -P tools\renut_release_shaders.py --glsl out\deko3d_shaders\glsl_opt --image out\default_image.bin
+powershell -File tools\win\build_switch.ps1 -Jobs 12 -BuildDir out\nx -Log out\nx_build.log -Pgo none -Define "ZUMASREVENGE_SWITCH_LTO=ON;ZUMASREVENGE_RENUT_RELEASE_SHADERS=ON"
 python tools\check_switch_build.py
 ```
 

@@ -2,7 +2,7 @@
 
 <h1 align=center>Zuma's Revenge!: Nintendo Switch port</h1>
 
-<p align=center><b>zumasrevenge-nx 1.0.1</b> · <a href="https://chanseyisthebest.github.io/zumasrevenge-nx-installer/">web installer</a> · <a href="https://github.com/ChanseyIsTheBest/zumasrevenge-nx/releases/tag/v1.0.1">release</a></p>
+<p align=center><b>zumasrevenge-nx 1.0.2</b> · <a href="https://chanseyisthebest.github.io/zumasrevenge-nx-installer/">web installer</a> · <a href="https://github.com/ChanseyIsTheBest/zumasrevenge-nx/releases/tag/v1.0.2">release</a></p>
 
 An unofficial native port of the Xbox 360 (Xbox Live Arcade) version of **Zuma's Revenge!** by PopCap Games, with
 touch controls. Made by static recompilation with [ReXGlue](https://github.com/rexglue/rexglue-sdk), from the
@@ -35,6 +35,12 @@ Features:
 - The console's system language by default, or `zumasrevenge_language`: `en`, `de`, `fr`, `es`, `it` or `pt`
   (Brazilian Portuguese).
 - Settings are in `zumasrevenge.toml` next to the NRO; delete it to get the defaults back.
+- A game menu: hold **A + B + X + Y + L + R** together (**+** closes it) for the settings (language, rumble, button
+  layout, Joy-Con, touch, and the menu's own buttons, colour, font and background), the achievements and each player's
+  controls. It saves your choices in `zumasrevenge.toml`.
+- Rumble: the game's own vibration, on by default (off in the menu, or `input_rumble = false`).
+- A smaller install: the installer stores the game files compressed, with the sounds as Opus and the intro movie as
+  H.265 (played by the Switch's video decoder).
 - No log files, except `logs/rex/rex_crash.log` after a crash.
 
 Known issue:

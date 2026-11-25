@@ -9,6 +9,8 @@
  * @modified    Tom Clay, 2026 - Adapted for ReXGlue runtime
  */
 
+#include <chrono>  // audio_diag_gap_ms (zumasrevenge-nx, 2026-11-25)
+
 #include <rex/assert.h>
 #include <rex/audio/audio_driver.h>
 #include <rex/audio/audio_system.h>
@@ -28,6 +30,14 @@
 REXCVAR_DEFINE_INT32(
     audio_maxqframes, 8, "Audio",
     "Max buffered audio frames (range 4-64). Lower reduces latency but may cause stuttering.");
+// zumasrevenge-nx (2026-11-25, Zuma's Revenge's intro: its player, timed by the audio, stopped 100-150 ms at the same
+// points every run while the game's audio thread waited): where the audio's flow stops, logged when a gap is at least
+// this long: the game's callbacks (here), the device's buffers released, the pump's requests to the game and the game's
+// frames submitted (switch_audio_system.cpp).
+REXCVAR_DEFINE_INT32(audio_diag_gap_ms, 0, "Audio",
+                     "Diagnostic: an [audio] line when a game audio callback takes, or the device releases no buffer, the "
+                     "pump requests no frame or the game submits no frame for, at least this many ms; 0 = off")
+    .range(0, 100000);
 REXCVAR_DEFINE_BOOL(audio_diag_critical_priority, false, "Audio",
                     "Diagnostic (PC only): Audio Worker and XMA Decoder at time-critical priority, "
                     "as on the Switch, where they run above the game threads and do not yield the "
@@ -166,8 +176,14 @@ void AudioSystem::WorkerThreadMain() {
         }
         SCOPE_profile_cpu_i("apu", "rex::audio::AudioSystem->client_callback");
         uint64_t args[] = {client_callback_arg};
+        const auto diag_t0 = std::chrono::steady_clock::now();  // audio_diag_gap_ms
         function_dispatcher_->Execute(worker_thread_->thread_state(), client_callback, args,
                                       rex::countof(args));
+        if (static const int diag_ms = REXCVAR_GET(audio_diag_gap_ms); diag_ms > 0) {
+          const double ms =
+              std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - diag_t0).count();
+          if (ms >= diag_ms) REXAPU_INFO("[audio] the game's callback for client {} took {:.1f} ms", index, ms);
+        }
         if (diag_pump_count < 10) {
           REXAPU_DEBUG("AudioWorker: callback returned for client {}", index);
         }

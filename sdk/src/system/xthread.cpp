@@ -1075,6 +1075,11 @@ uint32_t XThread::SelfSuspend() {
 }
 #endif
 
+// xobject.cpp (zumasrevenge-nx, 2026-11-25): diag_long_waits_ms's [wait] line.
+void NoteLongWait(const char* what, std::chrono::steady_clock::time_point t0, std::chrono::milliseconds timeout,
+                  int result, XObject* const* objects, uint32_t count);
+bool DiagLongWaitsOn();
+
 X_STATUS XThread::Delay(uint32_t processor_mode, uint32_t alertable, uint64_t interval) {
   int64_t timeout_ticks = interval;
   uint32_t timeout_ms;
@@ -1091,6 +1096,16 @@ X_STATUS XThread::Delay(uint32_t processor_mode, uint32_t alertable, uint64_t in
   }
   timeout_ms = chrono::Clock::ScaleGuestDurationMillis(timeout_ms);
   CheckTitleTermination();
+  // zumasrevenge-nx (2026-11-25, diag_long_waits_ms in xobject.cpp): a long sleep logged with the long waits
+  struct DiagSleep {
+    bool on;
+    std::chrono::steady_clock::time_point t0;
+    uint32_t ms;
+    ~DiagSleep() {
+      if (on) NoteLongWait("a sleep", t0, std::chrono::milliseconds(ms), 0, nullptr, 0);
+    }
+  } diag_sleep{DiagLongWaitsOn(), {}, timeout_ms};
+  if (diag_sleep.on) diag_sleep.t0 = std::chrono::steady_clock::now();
   if (alertable) {
     auto result = rex::thread::AlertableSleep(std::chrono::milliseconds(timeout_ms));
     CheckTitleTermination();
